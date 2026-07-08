@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>灵智启程后台</title>
+    <link rel="stylesheet" href="/static/admin.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/static/logo.png" alt="灵智启程">
+          <div><b>灵智启程</b><span>运营后台</span></div>
+        </div>
+        {% include "_nav.html" %}
+      </aside>
+      <section class="workspace">
+        <header>
+          <div>
+            <h1>{{ resource_title(resource) }}</h1>
+            <p>维护小程序展示内容和运营数据。</p>
+          </div>
+          {% if resource != 'leads' %}
+          <a class="button" href="/admin/{{ resource }}/new">新增</a>
+          {% endif %}
+        </header>
+
+        <section class="panel">
+          <table>
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>状态/类型</th>
+                <th>更新时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in items %}
+              <tr>
+                <td>{{ display_name(item) }}</td>
+                <td>{{ display_status(item) }}</td>
+                <td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') if item.updated_at else '-' }}</td>
+                <td class="actions">
+                  {% if resource == 'leads' %}
+                  <form method="post" action="/admin/leads/{{ item.id }}/status" class="inline-form">
+                    <select name="follow_status">
+                      <option value="pending" {{ 'selected' if item.follow_status == 'pending' else '' }}>待跟进</option>
+                      <option value="contacted" {{ 'selected' if item.follow_status == 'contacted' else '' }}>已联系</option>
+                      <option value="visited" {{ 'selected' if item.follow_status == 'visited' else '' }}>已到店</option>
+                      <option value="converted" {{ 'selected' if item.follow_status == 'converted' else '' }}>已成交</option>
+                      <option value="invalid" {{ 'selected' if item.follow_status == 'invalid' else '' }}>无效</option>
+                    </select>
+                    <input name="follow_note" placeholder="跟进备注" value="{{ item.follow_note or '' }}">
+                    <button>更新</button>
+                  </form>
+                  {% else %}
+                  <a href="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/edit">编辑</a>
+                  <form method="post" action="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/delete" class="inline-form">
+                    <button class="danger">删除</button>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4">暂无数据</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

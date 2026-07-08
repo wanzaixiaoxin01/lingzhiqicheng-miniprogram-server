@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>灵智启程后台</title>
+    <link rel="stylesheet" href="/static/admin.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/static/logo.png" alt="灵智启程">
+          <div><b>灵智启程</b><span>运营后台</span></div>
+        </div>
+        {% include "_nav.html" %}
+      </aside>
+      <section class="workspace">
+        <header>
+          <div>
+            <h1>{{ '编辑' if item else '新增' }}{{ resource_title(resource) }}</h1>
+            <p>保存后小程序端会读取已发布内容。</p>
+          </div>
+        </header>
+
+        <form class="edit-form panel" method="post" action="{{ form_action(resource, item) }}">
+          {% if resource == 'banners' %}
+          <label>标题<input name="title" value="{{ item.title if item else '' }}" required></label>
+          <label>图片 URL<input name="image_url" value="{{ item.image_url if item else '' }}" required></label>
+          <label>跳转类型<input name="link_type" value="{{ item.link_type if item else '' }}"></label>
+          <label>跳转值<input name="link_value" value="{{ item.link_value if item else '' }}"></label>
+          <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
+          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          {% elif resource == 'campuses' %}
+          <label>校区名称<input name="name" value="{{ item.name if item else '' }}" required></label>
+          <label>封面 URL<input name="cover_url" value="{{ item.cover_url if item else '' }}"></label>
+          <label>地址<input name="address" value="{{ item.address if item else '' }}" required></label>
+          <label>电话<input name="phone" value="{{ item.phone if item else '' }}" required></label>
+          <label>营业时间<input name="business_hours" value="{{ item.business_hours if item else '' }}"></label>
+          <label>介绍<textarea name="intro">{{ item.intro if item else '' }}</textarea></label>
+          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          {% elif resource == 'courses' %}
+          <label>课程名称<input name="title" value="{{ item.title if item else '' }}" required></label>
+          <label>分类<input name="category" value="{{ item.category if item else '智习室' }}"></label>
+          <label>封面 URL<input name="cover_url" value="{{ item.cover_url if item else '' }}"></label>
+          <label>简介<input name="summary" value="{{ item.summary if item else '' }}"></label>
+          <label>适合年级<input name="suitable_grade" value="{{ item.suitable_grade if item else '' }}"></label>
+          <label>服务周期<input name="service_period" value="{{ item.service_period if item else '' }}"></label>
+          <label>价格文案<input name="price_text" value="{{ item.price_text if item else '' }}"></label>
+          <label>标签，逗号分隔<input name="tags" value="{{ (item.tags or []) | join(',') if item else '' }}"></label>
+          <label>详情<textarea name="content">{{ item.content if item else '' }}</textarea></label>
+          <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
+          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          {% elif resource == 'articles' %}
+          <label>类型<select name="type">
+            {{ article_type_options(item.type if item else 'material') }}
+          </select></label>
+          <label>标题<input name="title" value="{{ item.title if item else '' }}" required></label>
+          <label>封面 URL<input name="cover_url" value="{{ item.cover_url if item else '' }}"></label>
+          <label>摘要<input name="summary" value="{{ item.summary if item else '' }}"></label>
+          <label>作者<input name="author" value="{{ item.author if item else '' }}"></label>
+          <label>正文<textarea name="content" required>{{ item.content if item else '' }}</textarea></label>
+          <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
+          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          {% elif resource == 'settings' %}
+          <label>配置键<input name="key" value="{{ item.key if item else '' }}" {{ 'readonly' if item else '' }} required></label>
+          <label>配置内容<textarea name="value">{{ item.value.text if item and item.value else '' }}</textarea></label>
+          {% endif %}
+
+          <div class="form-actions">
+            <button>保存</button>
+            <a href="/admin/{{ resource }}">返回</a>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

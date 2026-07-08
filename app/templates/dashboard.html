@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>灵智启程后台</title>
+    <link rel="stylesheet" href="/static/admin.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/static/logo.png" alt="灵智启程">
+          <div>
+            <b>灵智启程</b>
+            <span>运营后台</span>
+          </div>
+        </div>
+        {% include "_nav.html" %}
+      </aside>
+      <section class="workspace">
+        <header>
+          <div>
+            <h1>运营工作台</h1>
+            <p>管理首页内容、课程服务、预约线索和系统配置。</p>
+          </div>
+          <a class="button" href="/admin/leads">查看线索</a>
+        </header>
+
+        <section class="metrics">
+          <article><span>今日线索</span><b>{{ metrics.today_leads }}</b></article>
+          <article><span>待跟进</span><b>{{ metrics.pending_leads }}</b></article>
+          <article><span>在架课程</span><b>{{ metrics.active_courses }}</b></article>
+          <article><span>发布内容</span><b>{{ metrics.published_articles }}</b></article>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>待跟进预约</h2>
+            <a>查看全部</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>家长</th>
+                <th>手机号</th>
+                <th>孩子年级</th>
+                <th>意向</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for lead in leads %}
+              <tr>
+                <td>{{ lead.name }}</td>
+                <td>{{ lead.phone }}</td>
+                <td>{{ lead.child_grade }}</td>
+                <td>{{ lead.source }}</td>
+                <td><span class="badge">{{ lead.follow_status }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
