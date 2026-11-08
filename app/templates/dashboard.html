@@ -22,18 +22,26 @@
         <header>
           <div>
             <h1>运营工作台</h1>
-            <p>管理首页内容、课程服务、预约线索和系统配置。</p>
+            <p>{% if admin_role == 'admin' %}管理智习室网点、老师账号、小程序内容和预约线索。{% else %}管理所属智习室网点的学生和上课记录。{% endif %}</p>
           </div>
-          <a class="button" href="/admin/leads">查看线索</a>
+          <a class="button" href="{% if admin_role == 'admin' %}/admin/leads{% else %}/admin/visits{% endif %}">{% if admin_role == 'admin' %}查看线索{% else %}查看上课记录{% endif %}</a>
         </header>
 
         <section class="metrics">
+          {% if admin_role == 'admin' %}
           <article><span>今日线索</span><b>{{ metrics.today_leads }}</b></article>
           <article><span>待跟进</span><b>{{ metrics.pending_leads }}</b></article>
-          <article><span>在架课程</span><b>{{ metrics.active_courses }}</b></article>
+          <article><span>智习室网点</span><b>{{ metrics.published_campuses }}</b></article>
           <article><span>发布内容</span><b>{{ metrics.published_articles }}</b></article>
+          {% else %}
+          <article><span>在读学生</span><b>{{ metrics.active_students }}</b></article>
+          <article><span>上课记录</span><b>{{ metrics.attendance_records }}</b></article>
+          <article><span>快捷入口</span><b><a href="/admin/students">学生</a></b></article>
+          <article><span>快捷入口</span><b><a href="/admin/visits/new">上课记录</a></b></article>
+          {% endif %}
         </section>
 
+        {% if admin_role == 'admin' %}
         <section class="panel">
           <div class="panel-head">
             <h2>待跟进预约</h2>
@@ -62,6 +70,12 @@
             </tbody>
           </table>
         </section>
+        {% else %}
+        <section class="panel quick-panel">
+          <div class="panel-head"><h2>智习室网点工作</h2></div>
+          <div class="quick-links"><a class="button" href="/admin/students">管理学生</a>{% if admin_role == 'manager' %}<a class="button" href="/admin/staff">管理老师</a>{% endif %}<a class="button" href="/admin/visits/new">登记上课记录</a></div>
+        </section>
+        {% endif %}
       </section>
     </main>
   </body>

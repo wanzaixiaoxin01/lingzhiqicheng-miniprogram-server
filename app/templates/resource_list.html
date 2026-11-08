@@ -30,7 +30,7 @@
           <table>
             <thead>
               <tr>
-                <th>名称</th>
+                <th>{{ '资料' if resource == 'materials' else '名称' }}</th>
                 <th>状态/类型</th>
                 <th>更新时间</th>
                 <th>操作</th>
@@ -39,8 +39,21 @@
             <tbody>
               {% for item in items %}
               <tr>
-                <td>{{ display_name(item) }}</td>
-                <td>{{ display_status(item) }}</td>
+                <td>
+                  {% if resource == 'materials' %}
+                  <strong>{{ item.title }}</strong><br>
+                  <small>{{ item.original_name }} · {{ material_file_size(item.file_size) }} · 下载 {{ item.download_count }} 次</small>
+                  {% elif resource == 'campuses' %}
+                  <strong>{{ item.name }}</strong><br>
+                  <small>{{ item.manager_name or '未填写负责人' }} · {{ item.phone or '-' }}</small>
+                  {% else %}
+                  {{ display_name(item) }}
+                  {% endif %}
+                </td>
+                <td>
+                  {{ display_status(item) }}
+                  {% if resource == 'materials' and item.can_preview %}<br><small>支持小程序预览</small>{% endif %}
+                </td>
                 <td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') if item.updated_at else '-' }}</td>
                 <td class="actions">
                   {% if resource == 'leads' %}

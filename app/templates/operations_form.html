@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>灵智启程后台</title>
+    <link rel="stylesheet" href="/static/admin.css">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/static/logo.png" alt="灵智启程">
+          <div><b>灵智启程</b><span>运营后台</span></div>
+        </div>
+        {% include "_nav.html" %}
+      </aside>
+      <section class="workspace">
+        <header>
+          <div><h1>{{ title }}</h1><p>保存后，老师和家长端会按权限读取相关记录。</p></div>
+        </header>
+
+        <form class="edit-form panel" method="post" action="{% if resource == 'staff' %}/admin/staff{% elif resource == 'students' %}/admin/students{% elif resource == 'enrollments' %}/admin/enrollments{% else %}/admin/visits{% endif %}{% if item %}/{{ item.id }}{% endif %}">
+          {% if resource == 'staff' %}
+          <label>登录账号<input name="username" value="{{ item.username if item else '' }}" {{ 'readonly' if item else '' }} required></label>
+          <label>姓名<input name="display_name" value="{{ item.display_name if item else '' }}" required></label>
+          <label>手机号<input name="phone" value="{{ item.phone if item else '' }}"></label>
+          <label>密码{% if item %}<small class="muted">留空表示不修改</small>{% endif %}<input name="password" type="password" {{ 'required' if not item else '' }}></label>
+          <label>角色<select name="role">
+            {% for value, label in staff_roles %}<option value="{{ value }}" {{ 'selected' if item and item.role == value else '' }}>{{ label }}</option>{% endfor %}
+          </select></label>
+          <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>启用</option><option value="disabled" {{ 'selected' if item and item.status == 'disabled' else '' }}>停用</option></select></label>
+          <fieldset><legend>负责智习室网点</legend>{% for campus in campuses %}<label class="check-row"><input type="checkbox" name="campus_ids" value="{{ campus.id }}" {{ 'checked' if campus.id in selected_campuses else '' }}>{{ campus.name }}</label>{% else %}<small class="muted">请先创建智习室网点</small>{% endfor %}</fieldset>
+          {% elif resource == 'students' %}
+          <label>学生姓名<input name="name" value="{{ item.name if item else '' }}" required></label>
+          <label>年级<input name="grade" value="{{ item.grade if item else '' }}" placeholder="如：小学四年级" required></label>
+          <label>家长姓名<input name="guardian_name" value="{{ item.guardian_name if item else '' }}"></label>
+          <label>家长手机号<input name="guardian_phone" value="{{ item.guardian_phone if item else '' }}"></label>
+          <label>学校<input name="school" value="{{ item.school if item else '' }}"></label>
+          <label>性别<input name="gender" value="{{ item.gender if item else '' }}"></label>
+          <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if selected_campus == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
+          <label>学习方向<input name="service_type" value="{{ selected_service_type if item else '智习室学习' }}" placeholder="如：智习室学习、英语口语"></label>
+          <label>开始日期<input name="started_on" type="date" value="{{ item.enrollments[0].started_on if item and item.enrollments else '' }}"></label>
+          <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>在读</option><option value="inactive" {{ 'selected' if item and item.status == 'inactive' else '' }}>停用</option></select></label>
+          {% if item %}<p class="binding-hint">家长绑定码：<code>{{ item.binding_code or '已绑定' }}</code>，用于小程序绑定孩子。{% if not item.guardian_user_id %}<button class="link-button" type="submit" formaction="/admin/students/{{ item.id }}/binding-code" formmethod="post">重新生成</button>{% endif %}</p>{% endif %}
+          {% elif resource == 'enrollments' %}
+          <label>学生<select name="student_id" required>{% for student in students %}<option value="{{ student.id }}">{{ student.name }} · {{ student.grade }}</option>{% endfor %}</select></label>
+          <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}">{{ campus.name }}</option>{% endfor %}</select></label>
+          <label>学习方向<input name="service_type" value="智习室学习" required></label>
+          <label>开始日期<input name="started_on" type="date"></label>
+          <label>结束日期<input name="ended_on" type="date"></label>
+          <label>状态<select name="status"><option value="active">有效</option><option value="ended">已结束</option></select></label>
+          {% else %}
+          <label>上课日期<input name="attendance_date" type="date" value="{{ today }}" required></label>
+          <label>学生<select name="student_id" required>{% for student in students %}<option value="{{ student.id }}">{{ student.name }} · {{ student.grade }}</option>{% endfor %}</select></label>
+          <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}">{{ campus.name }}</option>{% endfor %}</select></label>
+          <label>学习方向<input name="service_type" value="智习室学习" required></label>
+          <label>备注<textarea name="note" placeholder="可填写当天学习内容"></textarea></label>
+          {% endif %}
+
+          <div class="form-actions"><button>保存</button><a href="/admin/{{ resource }}">返回</a></div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

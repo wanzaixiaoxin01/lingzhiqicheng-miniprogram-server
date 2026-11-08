@@ -1,9 +1,19 @@
 <nav>
   <a class="{{ 'active' if section == 'dashboard' else '' }}" href="/admin/">工作台</a>
-  <a class="{{ 'active' if section == 'banners' else '' }}" href="/admin/banners">Banner</a>
-  <a class="{{ 'active' if section == 'campuses' else '' }}" href="/admin/campuses">校区</a>
-  <a class="{{ 'active' if section == 'courses' else '' }}" href="/admin/courses">课程</a>
+  {% if admin_role == 'admin' %}
+  <a class="{{ 'active' if section == 'campuses' else '' }}" href="/admin/campuses">智习室网点</a>
   <a class="{{ 'active' if section == 'articles' else '' }}" href="/admin/articles">文章/活动</a>
-  <a class="{{ 'active' if section == 'leads' else '' }}" href="/admin/leads">线索</a>
-  <a class="{{ 'active' if section == 'settings' else '' }}" href="/admin/settings">配置</a>
+  <a class="{{ 'active' if section == 'materials' else '' }}" href="/admin/materials">学习资料</a>
+  <a class="{{ 'active' if section == 'leads' else '' }}" href="/admin/leads">预约线索</a>
+  {% endif %}
+  {% if admin_role in ['admin', 'manager'] %}
+  <a class="{{ 'active' if section == 'staff' else '' }}" href="/admin/staff">老师管理</a>
+  {% endif %}
+  {% if admin_role in ['admin', 'manager', 'teacher'] %}
+  <a class="{{ 'active' if section == 'students' else '' }}" href="/admin/students">学生管理</a>
+  {% endif %}
+  {% if admin_role in ['admin', 'manager', 'teacher'] %}
+  <a class="{{ 'active' if section == 'visits' else '' }}" href="/admin/visits">上课记录</a>
+  {% endif %}
+  <form method="post" action="/admin/logout"><button type="submit">退出登录</button></form>
 </nav>

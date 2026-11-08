@@ -3,14 +3,22 @@ from fastapi.staticfiles import StaticFiles
 
 from app.db import init_db
 from app.paths import STATIC_DIR
-from app.routes import admin_pages, public_api
+from app.routes import admin_pages, operations_admin, public_api
+from app.services.campus_image_storage import campus_image_storage
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="灵智启程 API")
     app.include_router(public_api.router, prefix="/api/public", tags=["public"])
     app.include_router(admin_pages.router, prefix="/admin", tags=["admin"])
+    app.include_router(operations_admin.router, prefix="/admin", tags=["operations"])
+    app.include_router(admin_pages.protected_router, prefix="/admin", tags=["admin"])
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+    app.mount(
+        "/uploads/campuses",
+        StaticFiles(directory=campus_image_storage.root, check_dir=False),
+        name="campus-uploads",
+    )
 
     @app.get("/health")
     def health() -> dict[str, str | bool]:

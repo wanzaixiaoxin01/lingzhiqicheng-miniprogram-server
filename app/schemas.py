@@ -24,6 +24,7 @@ class CampusOut(OrmModel):
     name: str
     cover_url: str | None = None
     address: str
+    manager_name: str | None = None
     latitude: Decimal | None = None
     longitude: Decimal | None = None
     phone: str
@@ -62,6 +63,19 @@ class ArticleOut(OrmModel):
     status: str
 
 
+class MaterialOut(OrmModel):
+    id: str
+    title: str
+    summary: str | None = None
+    original_name: str
+    extension: str
+    content_type: str
+    file_size: int
+    can_preview: bool
+    download_count: int
+    status: str
+
+
 class LeadOut(OrmModel):
     id: str
     name: str
@@ -74,3 +88,22 @@ class LeadOut(OrmModel):
     follow_status: str
     follow_note: str | None = None
     created_at: datetime
+
+
+class ParentStudentOut(OrmModel):
+    id: str
+    name: str
+    grade: str
+    gender: str | None = None
+    school: str | None = None
+    guardian_name: str | None = None
+    status: str
+
+
+class ParentBindOut(BaseModel):
+    message: str
+    student: ParentStudentOut
+
+
+class ParentSessionOut(BaseModel):
+    session_token: str

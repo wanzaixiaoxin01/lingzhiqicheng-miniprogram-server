@@ -23,7 +23,7 @@
           </div>
         </header>
 
-        <form class="edit-form panel" method="post" action="{{ form_action(resource, item) }}">
+        <form class="edit-form panel" method="post" enctype="multipart/form-data" action="{{ form_action(resource, item) }}">
           {% if resource == 'banners' %}
           <label>标题<input name="title" value="{{ item.title if item else '' }}" required></label>
           <label>图片 URL<input name="image_url" value="{{ item.image_url if item else '' }}" required></label>
@@ -32,11 +32,21 @@
           <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'campuses' %}
-          <label>校区名称<input name="name" value="{{ item.name if item else '' }}" required></label>
-          <label>封面 URL<input name="cover_url" value="{{ item.cover_url if item else '' }}"></label>
+          <label>智习室网点名称<input name="name" value="{{ item.name if item else '' }}" required></label>
+          <label>智习室网点封面
+            <input name="cover_file" type="file" accept=".jpg,.jpeg,.png,.gif,.webp">
+            <small class="muted">支持 JPG、PNG、GIF、WEBP，单个文件不超过 10 MB；编辑时留空则保留当前封面。</small>
+          </label>
+          {% if item and item.cover_url %}
+          <div class="cover-preview">
+            <img src="{{ item.cover_url }}" alt="当前智习室网点封面">
+            <small class="muted">当前封面</small>
+          </div>
+          {% endif %}
           <label>地址<input name="address" value="{{ item.address if item else '' }}" required></label>
-          <label>电话<input name="phone" value="{{ item.phone if item else '' }}" required></label>
-          <label>营业时间<input name="business_hours" value="{{ item.business_hours if item else '' }}"></label>
+          <label>负责人姓名<input name="manager_name" value="{{ item.manager_name if item else '' }}" required></label>
+          <label>负责人电话<input name="phone" value="{{ item.phone if item else '' }}" required></label>
+          <label>营业时间<input name="business_hours" value="{{ item.business_hours if item and item.business_hours else default_campus_business_hours }}"></label>
           <label>介绍<textarea name="intro">{{ item.intro if item else '' }}</textarea></label>
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'courses' %}
@@ -61,6 +71,12 @@
           <label>作者<input name="author" value="{{ item.author if item else '' }}"></label>
           <label>正文<textarea name="content" required>{{ item.content if item else '' }}</textarea></label>
           <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
+          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          {% elif resource == 'materials' %}
+          <label>资料标题<input name="title" value="{{ item.title if item else '' }}" required></label>
+          <label>资料简介<input name="summary" value="{{ item.summary if item else '' }}"></label>
+          <label>资料文件<input name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip" {{ 'required' if not item else '' }}><small class="muted">支持 PDF、Word、Excel、PPT、TXT、图片和 ZIP，单个文件不超过 100 MB。</small></label>
+          {% if item %}<p class="muted">当前文件：{{ item.original_name }}（{{ item.file_size }} bytes），不选择新文件则保留原文件。</p>{% endif %}
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'settings' %}
           <label>配置键<input name="key" value="{{ item.key if item else '' }}" {{ 'readonly' if item else '' }} required></label>

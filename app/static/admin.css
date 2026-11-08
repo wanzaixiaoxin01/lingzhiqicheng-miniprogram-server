@@ -155,6 +155,39 @@ button,
   font-weight: 900;
 }
 
+.toolbar {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.toolbar label {
+  display: grid;
+  gap: 6px;
+  color: #66758a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.toolbar input {
+  height: 36px;
+  border: 1px solid #dce6f1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font: inherit;
+}
+
+.toolbar a {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  color: #1168df;
+  font-weight: 900;
+  text-decoration: none;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -222,8 +255,24 @@ th {
 .edit-form label {
   display: grid;
   gap: 8px;
+  align-self: start;
   color: #263a54;
   font-weight: 900;
+}
+
+.cover-preview {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  grid-column: 1 / -1;
+}
+
+.cover-preview img {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #dce6f1;
 }
 
 .edit-form input,
@@ -242,6 +291,65 @@ th {
   grid-column: 1 / -1;
 }
 
+.edit-form fieldset {
+  display: grid;
+  gap: 10px;
+  grid-column: 1 / -1;
+  border: 1px solid #dce6f1;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.edit-form legend {
+  padding: 0 6px;
+  color: #263a54;
+  font-weight: 900;
+}
+
+.check-row {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: center;
+  gap: 8px !important;
+  font-weight: 700 !important;
+}
+
+.check-row input {
+  width: auto;
+}
+
+.binding-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #edf7ff;
+  color: #1168df;
+}
+
+.link-button {
+  display: inline;
+  height: auto;
+  margin-left: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0b57c9;
+  text-decoration: underline;
+  font-weight: 900;
+}
+
+.quick-panel {
+  padding-bottom: 18px;
+}
+
+.quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px;
+}
+
 .form-actions {
   grid-column: 1 / -1;
   display: flex;
@@ -258,4 +366,47 @@ th {
   color: #1168df;
   font-weight: 900;
   text-decoration: none;
+}
+
+.login-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-form {
+  width: min(420px, 100%);
+  padding: 30px;
+  display: grid;
+  gap: 16px;
+}
+
+.login-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 8px;
+  color: #263a54;
+  font-weight: 900;
+}
+
+.login-form input {
+  width: 100%;
+  border: 1px solid #dce6f1;
+  border-radius: 8px;
+  background: #f8fbfe;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.error {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff1f4;
+  color: #d92d47;
 }
