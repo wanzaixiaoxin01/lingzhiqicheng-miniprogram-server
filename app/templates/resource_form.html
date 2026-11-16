@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
-    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-5">
   </head>
   <body>
     <main class="shell">
@@ -73,10 +74,16 @@
           <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'materials' %}
-          <label>资料标题<input name="title" value="{{ item.title if item else '' }}" required></label>
+          {% if item %}
+          <label>资料标题<input name="title" value="{{ item.title }}" data-material-title required></label>
           <label>资料简介<input name="summary" value="{{ item.summary if item else '' }}"></label>
-          <label>资料文件<input name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip" {{ 'required' if not item else '' }}><small class="muted">支持 PDF、Word、Excel、PPT、TXT、图片和 ZIP，单个文件不超过 100 MB。</small></label>
-          {% if item %}<p class="muted">当前文件：{{ item.original_name }}（{{ item.file_size }} bytes），不选择新文件则保留原文件。</p>{% endif %}
+          <label>资料文件<input name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip" data-material-file><small class="muted">支持 PDF、Word、Excel、PPT、TXT、图片和 ZIP，单个文件不超过 100 MB。</small></label>
+          <p class="muted">当前文件：{{ item.original_name }}（{{ item.file_size }} bytes），不选择新文件则保留原文件。</p>
+          {% else %}
+          <label>资料简介<input name="summary" value=""></label>
+          <label>资料文件<input name="file" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png,.gif,.webp,.zip" data-material-file multiple required><small class="muted">支持一次选择或拖入多个文件；每个文件不超过 100 MB。</small></label>
+          <p class="muted">每个文件将创建一条资料记录，标题自动取文件名。</p>
+          {% endif %}
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'settings' %}
           <label>配置键<input name="key" value="{{ item.key if item else '' }}" {{ 'readonly' if item else '' }} required></label>
@@ -90,5 +97,6 @@
         </form>
       </section>
     </main>
+    {% if resource == 'materials' %}<script type="module" src="/static/material-form.js"></script>{% endif %}
   </body>
 </html>

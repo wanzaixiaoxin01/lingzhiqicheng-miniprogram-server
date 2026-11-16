@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
-    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-7">
   </head>
   <body>
     <main class="shell">
@@ -19,15 +20,88 @@
         <header>
           <div>
             <h1>{{ resource_title(resource) }}</h1>
-            <p>维护小程序展示内容和运营数据。</p>
+            <p>{% if resource == 'leads' %}查询家长预约，记录跟进进度和转化结果。{% else %}维护小程序展示内容和运营数据。{% endif %}</p>
           </div>
           {% if resource != 'leads' %}
-          <a class="button" href="/admin/{{ resource }}/new">新增</a>
+          <a class="btn btn-primary" href="/admin/{{ resource }}/new">新增</a>
           {% endif %}
         </header>
 
-        <section class="panel">
-          <table>
+        {% if resource == 'leads' %}
+        <form class="card mb-3" method="get" action="/admin/leads">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-2"><label class="form-label">跟进状态</label><select class="form-select" name="follow_status">
+                <option value="">全部状态</option>
+                <option value="pending" {{ 'selected' if filters.follow_status == 'pending' else '' }}>待跟进</option>
+                <option value="contacted" {{ 'selected' if filters.follow_status == 'contacted' else '' }}>已联系</option>
+                <option value="visited" {{ 'selected' if filters.follow_status == 'visited' else '' }}>已到店</option>
+                <option value="converted" {{ 'selected' if filters.follow_status == 'converted' else '' }}>已成交</option>
+                <option value="invalid" {{ 'selected' if filters.follow_status == 'invalid' else '' }}>无效</option>
+              </select></div>
+              <div class="col-md-3"><label class="form-label">家长姓名</label><input class="form-control" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></div>
+              <div class="col-md-3"><label class="form-label">家长手机号</label><input class="form-control" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></div>
+              <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
+              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/leads">重置</a></div>
+              <div class="col-auto ms-auto text-secondary list-total">共 <strong>{{ pagination.total }}</strong> 条</div>
+            </div>
+          </div>
+        </form>
+
+        <section class="card">
+          <div class="table-responsive">
+            <table class="table table-vcenter card-table lead-table">
+              <thead><tr><th>家长信息</th><th>孩子与意向</th><th>当前状态</th><th>更新时间</th><th>跟进操作</th></tr></thead>
+              <tbody>
+                {% for item in items %}
+                <tr>
+                  <td>
+                    <div class="lead-contact">
+                      <div class="lead-contact-info"><strong>{{ item.name }}</strong><small>{{ item.phone }}</small></div>
+                      <button class="action-link action-edit lead-copy" type="button" data-name="{{ item.name }}" data-phone="{{ item.phone }}" aria-label="复制{{ item.name }}的姓名和手机号">复制</button>
+                    </div>
+                  </td>
+                  <td><strong>{{ item.child_grade }}</strong><small>{{ lead_source_label(item.source) }}</small></td>
+                  <td><span class="status-badge status-{{ item.follow_status }}">{{ display_resource_status(resource, item) }}</span></td>
+                  <td><span class="date-text">{{ item.updated_at.strftime('%Y-%m-%d') if item.updated_at else '-' }}</span><small>{{ item.updated_at.strftime('%H:%M') if item.updated_at else '' }}</small></td>
+                  <td>
+                    <form method="post" action="/admin/leads/{{ item.id }}/status" class="lead-update-form">
+                      <input type="hidden" name="return_to" value="{{ current_url }}">
+                      <select class="form-select form-select-sm" name="follow_status" aria-label="跟进状态">
+                        <option value="pending" {{ 'selected' if item.follow_status == 'pending' else '' }}>待跟进</option>
+                        <option value="contacted" {{ 'selected' if item.follow_status == 'contacted' else '' }}>已联系</option>
+                        <option value="visited" {{ 'selected' if item.follow_status == 'visited' else '' }}>已到店</option>
+                        <option value="converted" {{ 'selected' if item.follow_status == 'converted' else '' }}>已成交</option>
+                        <option value="invalid" {{ 'selected' if item.follow_status == 'invalid' else '' }}>无效</option>
+                      </select>
+                      <input class="form-control form-control-sm" name="follow_note" placeholder="填写跟进备注" value="{{ item.follow_note or '' }}">
+                      <button class="btn btn-primary btn-sm">保存</button>
+                    </form>
+                  </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="empty-state">没有找到符合条件的线索</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% include "_list_pagination.html" %}
+        </section>
+        {% else %}
+        <form class="card mb-3" method="get" action="/admin/{{ resource }}">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-5"><label class="form-label">关键词</label><input class="form-control" name="search" value="{{ filters.search }}" placeholder="搜索名称、标题、地址或手机号"></div>
+              {% if status_options %}<div class="col-md-2"><label class="form-label">状态</label><select class="form-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
+              <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
+              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/{{ resource }}">重置</a></div>
+              <div class="col-auto ms-auto text-secondary list-total">共 <strong>{{ pagination.total }}</strong> 条</div>
+            </div>
+          </div>
+        </form>
+
+        <section class="card">
+          <div class="table-responsive"><table class="table table-vcenter card-table">
             <thead>
               <tr>
                 <th>{{ '资料' if resource == 'materials' else '名称' }}</th>
@@ -51,38 +125,76 @@
                   {% endif %}
                 </td>
                 <td>
-                  {{ display_status(item) }}
-                  {% if resource == 'materials' and item.can_preview %}<br><small>支持小程序预览</small>{% endif %}
+                  <span class="badge {{ 'bg-green-lt text-green' if item.status == 'published' else 'bg-yellow-lt text-yellow' if item.status == 'draft' else 'bg-secondary-lt text-secondary' }}">{{ display_resource_status(resource, item) }}</span>
+                  {% if resource == 'materials' %}
+                  <br><small>{{ '小程序可见' if item.status == 'published' else '小程序不可见' }}</small>
+                  {% endif %}
                 </td>
                 <td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') if item.updated_at else '-' }}</td>
                 <td class="actions">
-                  {% if resource == 'leads' %}
-                  <form method="post" action="/admin/leads/{{ item.id }}/status" class="inline-form">
-                    <select name="follow_status">
-                      <option value="pending" {{ 'selected' if item.follow_status == 'pending' else '' }}>待跟进</option>
-                      <option value="contacted" {{ 'selected' if item.follow_status == 'contacted' else '' }}>已联系</option>
-                      <option value="visited" {{ 'selected' if item.follow_status == 'visited' else '' }}>已到店</option>
-                      <option value="converted" {{ 'selected' if item.follow_status == 'converted' else '' }}>已成交</option>
-                      <option value="invalid" {{ 'selected' if item.follow_status == 'invalid' else '' }}>无效</option>
-                    </select>
-                    <input name="follow_note" placeholder="跟进备注" value="{{ item.follow_note or '' }}">
-                    <button>更新</button>
-                  </form>
-                  {% else %}
-                  <a href="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/edit">编辑</a>
-                  <form method="post" action="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/delete" class="inline-form">
-                    <button class="danger">删除</button>
-                  </form>
-                  {% endif %}
+                  <div class="action-group">
+                    <a class="action-link action-edit" href="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/edit">编辑</a>
+                    <form method="post" action="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/delete" class="inline-form">
+                      <button class="action-link action-delete">删除</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
               {% else %}
               <tr><td colspan="4">暂无数据</td></tr>
               {% endfor %}
             </tbody>
-          </table>
+          </table></div>
+          {% include "_list_pagination.html" %}
         </section>
+        {% endif %}
       </section>
     </main>
+    {% if resource == 'leads' %}
+    <div class="copy-toast" role="status" aria-live="polite">姓名和手机号已复制</div>
+    <script>
+      (() => {
+        const toast = document.querySelector('.copy-toast');
+        let toastTimer;
+
+        const fallbackCopy = (text) => {
+          const input = document.createElement('textarea');
+          input.value = text;
+          input.setAttribute('readonly', '');
+          input.style.position = 'fixed';
+          input.style.opacity = '0';
+          document.body.appendChild(input);
+          input.select();
+          const copied = document.execCommand('copy');
+          input.remove();
+          return copied;
+        };
+
+        const showToast = (message, failed = false) => {
+          toast.textContent = message;
+          toast.classList.toggle('is-error', failed);
+          toast.classList.add('is-visible');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 1800);
+        };
+
+        document.querySelectorAll('.lead-copy').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const text = `${button.dataset.name} ${button.dataset.phone}`;
+            try {
+              if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+              } else if (!fallbackCopy(text)) {
+                throw new Error('copy failed');
+              }
+              showToast('姓名和手机号已复制');
+            } catch (error) {
+              showToast('复制失败，请手动复制', true);
+            }
+          });
+        });
+      })();
+    </script>
+    {% endif %}
   </body>
 </html>

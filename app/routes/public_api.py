@@ -12,7 +12,8 @@ from app import models
 from app.config import settings
 from app.domain.leads import validate_lead_input
 from app.auth import parent_session_token, parse_parent_session
-from app.domain.parent_binding import bind_student_to_parent, list_parent_students
+from app.domain.parent_binding import bind_student_to_parent, bind_students_by_verified_phone, list_parent_students
+from app.domain.parent_dashboard import build_parent_dashboard, mask_phone
 from app.db import get_db
 from app import repositories
 from app.schemas import (
@@ -23,10 +24,13 @@ from app.schemas import (
     LeadOut,
     MaterialOut,
     ParentBindOut,
+    ParentDashboardOut,
+    ParentPhoneOut,
     ParentSessionOut,
     ParentStudentOut,
 )
 from app.services.material_storage import material_storage
+from app.services.wechat_phone import WechatPhoneError, exchange_phone_code
 
 
 router = APIRouter()
@@ -170,6 +174,16 @@ def parent_openid(request: Request, payload_openid: str | None = None) -> str:
     return (request.headers.get("x-wechat-openid") or payload_openid or "").strip()
 
 
+def require_parent_user(request: Request, db: Session) -> models.User:
+    openid = parent_openid(request)
+    if not openid:
+        raise HTTPException(status_code=401, detail="家长登录已失效")
+    parent = db.scalar(select(models.User).where(models.User.openid == openid))
+    if parent is None:
+        raise HTTPException(status_code=401, detail="家长登录已失效")
+    return parent
+
+
 @router.post("/parent/session")
 def create_parent_session(payload: dict, db: Session = Depends(get_db)) -> ParentSessionOut:
     openid = ""
@@ -190,6 +204,25 @@ def create_parent_session(payload: dict, db: Session = Depends(get_db)) -> Paren
         parent.unionid = unionid
     db.commit()
     return ParentSessionOut(session_token=parent_session_token(openid))
+
+
+@router.post("/parent/phone", response_model=ParentPhoneOut)
+def authorize_parent_phone(payload: dict, request: Request, db: Session = Depends(get_db)) -> ParentPhoneOut:
+    parent = require_parent_user(request, db)
+    try:
+        phone = exchange_phone_code(str(payload.get("code") or ""))
+        result = bind_students_by_verified_phone(db, parent.openid, phone)
+    except WechatPhoneError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return ParentPhoneOut(phone_masked=mask_phone(result.parent.phone), matched_students=len(result.students))
+
+
+@router.get("/parent/dashboard", response_model=ParentDashboardOut)
+def get_parent_dashboard(request: Request, db: Session = Depends(get_db)) -> dict:
+    parent = require_parent_user(request, db)
+    return build_parent_dashboard(db, parent)
 
 
 @router.post("/parent/bind", status_code=200)

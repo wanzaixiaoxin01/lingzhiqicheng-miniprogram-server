@@ -1,0 +1,6 @@
+Tabler Core 1.4.0
+https://github.com/tabler/tabler
+
+Tabler is a free and open-source HTML dashboard UI kit distributed under
+the MIT License. The vendored CSS and JavaScript files in this directory
+come from the official @tabler/core npm package.

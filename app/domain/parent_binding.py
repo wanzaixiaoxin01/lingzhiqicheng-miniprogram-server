@@ -1,10 +1,17 @@
 import re
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import models
+
+
+@dataclass
+class VerifiedPhoneBinding:
+    parent: models.User
+    students: list[models.Student]
 
 
 def normalize_phone(value: str | None) -> str:
@@ -88,3 +95,60 @@ def list_parent_students(db: Session, user_id: str) -> list[models.Student]:
             .order_by(models.Student.created_at.desc())
         ).all()
     )
+
+
+def bind_students_by_verified_phone(db: Session, openid: str, phone: str) -> VerifiedPhoneBinding:
+    wx_openid = (openid or "").strip()
+    normalized_phone = normalize_phone(phone)
+    if not wx_openid or not normalized_phone:
+        raise ValueError("微信标识和授权手机号不能为空")
+
+    parent = db.scalar(select(models.User).where(models.User.openid == wx_openid))
+    candidates = list(db.scalars(select(models.Student).where(models.Student.status == "active")).all())
+    students = [item for item in candidates if normalize_phone(item.guardian_phone) == normalized_phone]
+
+    conflicting = [
+        item
+        for item in students
+        if item.guardian_user_id and (parent is None or item.guardian_user_id != parent.id)
+    ]
+    if conflicting:
+        raise ValueError("该学生已绑定其他微信，请联系服务点处理")
+
+    if parent is None:
+        parent = models.User(openid=wx_openid, phone=normalized_phone)
+        db.add(parent)
+        db.flush()
+    else:
+        parent.phone = normalized_phone
+
+    for student in students:
+        student.guardian_user_id = parent.id
+        student.binding_code = None
+        student.binding_code_expires_at = None
+
+    db.commit()
+    db.refresh(parent)
+    return VerifiedPhoneBinding(parent=parent, students=students)
+
+
+def link_unbound_students_by_phone(db: Session, parent: models.User) -> list[models.Student]:
+    normalized_phone = normalize_phone(parent.phone)
+    if not normalized_phone:
+        return []
+    candidates = list(
+        db.scalars(
+            select(models.Student).where(
+                models.Student.status == "active",
+                models.Student.guardian_user_id.is_(None),
+            )
+        ).all()
+    )
+    students = [item for item in candidates if normalize_phone(item.guardian_phone) == normalized_phone]
+    for student in students:
+        student.guardian_user_id = parent.id
+        student.binding_code = None
+        student.binding_code_expires_at = None
+    if students:
+        db.commit()
+    return students

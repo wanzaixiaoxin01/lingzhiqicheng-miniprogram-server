@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile
 
 from app import models, repositories
+from app.admin_pagination import pagination_context
 from app.auth import (
     ROLE_ADMIN,
     admin_session_token,
@@ -25,6 +27,34 @@ from app.domain.staff_access import can_access_resource
 from app.paths import TEMPLATES_DIR
 from app.services.campus_image_storage import campus_image_storage
 from app.services.material_storage import material_storage
+
+
+def display_resource_status(resource: str, item: Any) -> str:
+    status = (
+        getattr(item, "status", None)
+        or getattr(item, "type", None)
+        or getattr(item, "follow_status", None)
+        or "-"
+    )
+    labels = {
+        "campuses": {"published": "正常"},
+        "materials": {"published": "已发布", "draft": "草稿", "archived": "下架"},
+        "leads": {
+            "pending": "待跟进",
+            "contacted": "已联系",
+            "visited": "已到店",
+            "converted": "已成交",
+            "invalid": "无效",
+        },
+    }
+    common_labels = {
+        "published": "已发布",
+        "draft": "草稿",
+        "archived": "已下架",
+        "active": "正常",
+        "inactive": "已停用",
+    }
+    return labels.get(resource, {}).get(status, common_labels.get(status, status))
 
 
 router = APIRouter()
@@ -44,10 +74,7 @@ templates.env.globals.update(
     or getattr(item, "name", None)
     or getattr(item, "key", None)
     or f"{getattr(item, 'name', '')} {getattr(item, 'phone', '')}".strip(),
-    display_status=lambda item: getattr(item, "status", None)
-    or getattr(item, "type", None)
-    or getattr(item, "follow_status", None)
-    or "-",
+    display_resource_status=display_resource_status,
     form_action=lambda resource, item: f"/admin/{resource}/{item.id if hasattr(item, 'id') else item.key}" if item else f"/admin/{resource}",
 )
 templates.env.globals["status_options"] = lambda selected: Markup(
@@ -63,6 +90,11 @@ templates.env.globals["article_type_options"] = lambda selected: Markup(
     )
 )
 templates.env.globals["default_campus_business_hours"] = DEFAULT_CAMPUS_BUSINESS_HOURS
+templates.env.globals["lead_source_label"] = lambda source: {
+    "trial": "体验预约",
+    "course": "课程咨询",
+    "campus": "网点咨询",
+}.get(source, source or "-")
 templates.env.globals["material_file_size"] = lambda size: (
     f"{size} B"
     if size < 1024
@@ -80,6 +112,14 @@ MODEL_MAP = {
     "materials": models.Material,
     "leads": models.Lead,
     "settings": models.Setting,
+}
+
+RESOURCE_STATUS_OPTIONS = {
+    "banners": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
+    "campuses": [("published", "正常"), ("draft", "暂停展示")],
+    "courses": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
+    "articles": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
+    "materials": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
 }
 
 
@@ -141,7 +181,7 @@ def logout(request: Request):
 def dashboard(request: Request, db: Session = Depends(get_db)):
     role = admin_role(request)
     is_platform_admin = role == ROLE_ADMIN
-    leads = repositories.admin_list(models.Lead, db)[:8] if is_platform_admin else []
+    leads = repositories.list_latest_pending_leads(db) if is_platform_admin else []
     metrics = repositories.dashboard_metrics(db) if is_platform_admin else repositories.dashboard_operations_metrics(
         db, repositories.staff_campus_ids(db, getattr(request.state.admin_identity, "id", None))
     )
@@ -153,16 +193,52 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
 
 
 @protected_router.get("/{resource}")
-def list_resource(resource: str, request: Request, db: Session = Depends(get_db)):
+def list_resource(
+    resource: str,
+    request: Request,
+    follow_status: str = "",
+    parent_name: str = "",
+    phone: str = "",
+    search: str = "",
+    status: str = "",
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
     ensure_resource_access(request, resource)
     model = MODEL_MAP.get(resource)
     if model is None:
         raise HTTPException(status_code=404, detail="管理资源不存在")
-    items = repositories.admin_list(model, db)
+    context = {"resource": resource, "section": resource, "admin_role": admin_role(request)}
+    if resource == "leads":
+        filters = {
+            "follow_status": follow_status.strip(),
+            "parent_name": parent_name.strip(),
+            "phone": phone.strip(),
+        }
+        result = repositories.list_admin_leads(db, page=page, page_size=10, **filters)
+
+        context.update(
+            {
+                "items": result.items,
+                "filters": filters,
+                **pagination_context(result, "/admin/leads", filters),
+            }
+        )
+    else:
+        filters = {"search": search.strip(), "status": status.strip()}
+        result = repositories.list_admin_items(model, db, page=page, page_size=10, **filters)
+        context.update(
+            {
+                "items": result.items,
+                "filters": filters,
+                "status_options": RESOURCE_STATUS_OPTIONS.get(resource, []),
+                **pagination_context(result, f"/admin/{resource}", filters),
+            }
+        )
     return templates.TemplateResponse(
         request,
         "resource_list.html",
-        {"resource": resource, "items": items, "section": resource, "admin_role": admin_role(request)},
+        context,
     )
 
 
@@ -255,6 +331,7 @@ def update_lead_status(
     item_id: str,
     follow_status: str = Form(...),
     follow_note: str = Form(""),
+    return_to: str = Form("/admin/leads"),
     db: Session = Depends(get_db),
 ):
     lead = db.get(models.Lead, item_id)
@@ -263,41 +340,50 @@ def update_lead_status(
     lead.follow_status = follow_status
     lead.follow_note = follow_note
     db.commit()
-    return redirect("/admin/leads")
+    return redirect(return_to if return_to.startswith("/admin/leads") else "/admin/leads")
 
 
 async def create_material(form_data, db: Session) -> RedirectResponse:
-    title = text(form_data, "title")
-    if not title:
-        raise HTTPException(status_code=400, detail="资料标题不能为空")
-    upload = form_data.get("file")
-    if not isinstance(upload, UploadFile) or not upload.filename:
+    uploads = [
+        upload
+        for upload in form_data.getlist("file")
+        if isinstance(upload, UploadFile) and upload.filename
+    ]
+    if not uploads:
         raise HTTPException(status_code=400, detail="请选择资料文件")
 
-    material_id = models.new_id()
+    summary = text(form_data, "summary") or None
+    status = text(form_data, "status") or "published"
+    saved_storage_names: list[str] = []
     try:
-        info, storage_name, file_size = await material_storage.save_upload(upload, material_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-
-    item = models.Material(
-        id=material_id,
-        title=title,
-        summary=text(form_data, "summary") or None,
-        original_name=info.original_name,
-        storage_name=storage_name,
-        extension=info.extension,
-        content_type=info.content_type,
-        file_size=file_size,
-        can_preview=info.can_preview,
-        status=text(form_data, "status") or "published",
-    )
-    try:
-        db.add(item)
+        for upload in uploads:
+            material_id = models.new_id()
+            info, storage_name, file_size = await material_storage.save_upload(upload, material_id)
+            saved_storage_names.append(storage_name)
+            db.add(
+                models.Material(
+                    id=material_id,
+                    title=Path(info.original_name).stem,
+                    summary=summary,
+                    original_name=info.original_name,
+                    storage_name=storage_name,
+                    extension=info.extension,
+                    content_type=info.content_type,
+                    file_size=file_size,
+                    can_preview=info.can_preview,
+                    status=status,
+                )
+            )
         db.commit()
+    except ValueError as exc:
+        db.rollback()
+        for storage_name in saved_storage_names:
+            material_storage.remove(storage_name)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception:
         db.rollback()
-        material_storage.remove(storage_name)
+        for storage_name in saved_storage_names:
+            material_storage.remove(storage_name)
         raise
     return redirect("/admin/materials")
 

@@ -218,6 +218,8 @@ class AttendanceRecord(Base, TimestampMixin):
     course_id: Mapped[str | None] = mapped_column(ForeignKey("courses.id"), nullable=True)
     attendance_date: Mapped[date] = mapped_column(Date, index=True)
     service_type: Mapped[str] = mapped_column(String(80))
+    morning_present: Mapped[bool] = mapped_column(default=False, server_default="false")
+    afternoon_present: Mapped[bool] = mapped_column(default=False, server_default="false")
     recorded_by: Mapped[str | None] = mapped_column(ForeignKey("admin_users.id"), nullable=True, index=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
 

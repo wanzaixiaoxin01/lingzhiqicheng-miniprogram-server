@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
-    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-5">
   </head>
   <body>
     <main class="shell">
@@ -37,7 +38,7 @@
           <article><span>在读学生</span><b>{{ metrics.active_students }}</b></article>
           <article><span>上课记录</span><b>{{ metrics.attendance_records }}</b></article>
           <article><span>快捷入口</span><b><a href="/admin/students">学生</a></b></article>
-          <article><span>快捷入口</span><b><a href="/admin/visits/new">上课记录</a></b></article>
+          <article><span>快捷入口</span><b><a href="/admin/visits">上课点名</a></b></article>
           {% endif %}
         </section>
 
@@ -45,7 +46,7 @@
         <section class="panel">
           <div class="panel-head">
             <h2>待跟进预约</h2>
-            <a>查看全部</a>
+            <a href="/admin/leads?follow_status=pending">查看全部</a>
           </div>
           <table>
             <thead>
@@ -63,9 +64,11 @@
                 <td>{{ lead.name }}</td>
                 <td>{{ lead.phone }}</td>
                 <td>{{ lead.child_grade }}</td>
-                <td>{{ lead.source }}</td>
-                <td><span class="badge">{{ lead.follow_status }}</span></td>
+                <td>{{ lead_source_label(lead.source) }}</td>
+                <td><span class="status-badge status-{{ lead.follow_status }}">{{ display_resource_status('leads', lead) }}</span></td>
               </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-state">暂无待跟进预约</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -73,7 +76,7 @@
         {% else %}
         <section class="panel quick-panel">
           <div class="panel-head"><h2>智习室网点工作</h2></div>
-          <div class="quick-links"><a class="button" href="/admin/students">管理学生</a>{% if admin_role == 'manager' %}<a class="button" href="/admin/staff">管理老师</a>{% endif %}<a class="button" href="/admin/visits/new">登记上课记录</a></div>
+          <div class="quick-links"><a class="button" href="/admin/students">管理学生</a>{% if admin_role == 'manager' %}<a class="button" href="/admin/staff">管理老师</a>{% endif %}<a class="button" href="/admin/visits">学生点名</a></div>
         </section>
         {% endif %}
       </section>

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -107,3 +107,46 @@ class ParentBindOut(BaseModel):
 
 class ParentSessionOut(BaseModel):
     session_token: str
+
+
+class ParentPhoneOut(BaseModel):
+    phone_masked: str
+    matched_students: int
+
+
+class ParentEnrollmentOut(BaseModel):
+    id: str
+    campus_name: str
+    course_title: str | None = None
+    service_type: str
+    started_on: date | None = None
+    ended_on: date | None = None
+    status: str
+
+
+class ParentAttendanceOut(BaseModel):
+    id: str
+    attendance_date: date
+    campus_name: str
+    course_title: str | None = None
+    service_type: str
+    note: str | None = None
+    morning_present: bool
+    afternoon_present: bool
+    attendance_period_label: str
+
+
+class ParentDashboardStudentOut(BaseModel):
+    id: str
+    name: str
+    grade: str
+    school: str | None = None
+    attendance_count: int
+    enrollments: list[ParentEnrollmentOut]
+    attendance_records: list[ParentAttendanceOut]
+
+
+class ParentDashboardOut(BaseModel):
+    phone_masked: str
+    needs_phone_authorization: bool
+    students: list[ParentDashboardStudentOut]

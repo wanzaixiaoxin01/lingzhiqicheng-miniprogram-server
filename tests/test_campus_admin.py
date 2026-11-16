@@ -1,9 +1,15 @@
 import unittest
+from types import SimpleNamespace
 
-from app.routes.admin_pages import campus_values
+from app.routes.admin_pages import campus_values, display_resource_status
 
 
 class CampusAdminFormTest(unittest.TestCase):
+    def test_published_campus_status_is_displayed_as_normal(self):
+        campus = SimpleNamespace(status="published")
+
+        self.assertEqual(display_resource_status("campuses", campus), "正常")
+
     def test_business_hours_defaults_to_weekend_schedule(self):
         values = campus_values(
             {

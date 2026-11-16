@@ -4,7 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
-    <link rel="stylesheet" href="/static/admin.css">
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-7">
   </head>
   <body>
     <main class="shell">
@@ -21,22 +22,33 @@
             <h1>{{ title }}</h1>
             <p>按账号权限管理智习室网点和学生学习记录。</p>
           </div>
-          <a class="button" href="/admin/{{ resource }}/new">新增</a>
+          <a class="btn btn-primary" href="/admin/{{ resource }}/new">新增</a>
         </header>
 
-        {% if resource == 'visits' %}
-        <form class="toolbar panel" method="get" action="/admin/visits">
-          <label>按日期查看<input type="date" name="attendance_date" value="{{ selected_date or '' }}"></label>
-          <button>筛选</button>
-          <a href="/admin/visits">查看全部</a>
+        <form class="card mb-3" method="get" action="/admin/{{ resource }}">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-5">
+                <label class="form-label">关键词</label>
+                <input class="form-control" name="search" value="{{ filters.search }}" placeholder="{% if resource == 'staff' %}搜索姓名、账号或手机号{% elif resource == 'students' %}搜索学生、学校、家长或手机号{% else %}搜索学生、网点或学习方向{% endif %}">
+              </div>
+              {% if resource == 'visits' %}
+              <div class="col-md-2"><label class="form-label">上课日期</label><input class="form-control" type="date" name="attendance_date" value="{{ selected_date or '' }}"></div>
+              {% elif status_options %}
+              <div class="col-md-2"><label class="form-label">状态</label><select class="form-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></div>
+              {% endif %}
+              <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
+              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/{{ resource }}">重置</a></div>
+              <div class="col-auto ms-auto text-secondary list-total">共 <strong>{{ pagination.total }}</strong> 条</div>
+            </div>
+          </div>
         </form>
-        {% endif %}
 
-        <section class="panel">
-          <table>
+        <section class="card">
+          <div class="table-responsive"><table class="table table-vcenter card-table">
             <thead>
               {% if resource == 'staff' %}
-              <tr><th>账号</th><th>角色</th><th>电话</th><th>状态</th><th>操作</th></tr>
+              <tr><th>账号</th><th>角色</th><th>负责网点</th><th>电话</th><th>状态</th><th>操作</th></tr>
               {% elif resource == 'students' %}
               <tr><th>学生</th><th>年级</th><th>家长联系方式</th><th>智习室网点</th><th>绑定码</th><th>操作</th></tr>
               {% elif resource == 'enrollments' %}
@@ -51,9 +63,16 @@
                 <tr>
                   <td><strong>{{ item.display_name }}</strong><br><small>{{ item.username }}</small></td>
                   <td>{{ {'admin': '平台管理员', 'manager': '网点负责人', 'teacher': '老师'}.get(item.role, item.role) }}</td>
+                  <td class="campus-list">
+                    {% for assignment in item.campus_assignments %}
+                    <span>{{ assignment.campus.name }}</span>
+                    {% else %}
+                    <span class="text-secondary">未分配</span>
+                    {% endfor %}
+                  </td>
                   <td>{{ item.phone or '-' }}</td>
-                  <td>{{ '启用' if item.status == 'active' else '停用' }}</td>
-                  <td class="actions"><a href="/admin/staff/{{ item.id }}/edit">编辑</a>{% if item.status == 'active' %}<form method="post" action="/admin/staff/{{ item.id }}/delete" class="inline-form"><button class="danger">停用</button></form>{% endif %}</td>
+                  <td><span class="badge {{ 'bg-green-lt text-green' if item.status == 'active' else 'bg-secondary-lt text-secondary' }}">{{ '启用' if item.status == 'active' else '停用' }}</span></td>
+                  <td class="actions"><div class="action-group"><a class="action-link action-edit" href="/admin/staff/{{ item.id }}/edit">编辑</a>{% if item.status == 'active' %}<form method="post" action="/admin/staff/{{ item.id }}/delete" class="inline-form"><button class="action-link action-delete">停用</button></form>{% endif %}</div></td>
                 </tr>
                 {% elif resource == 'students' %}
                 <tr>
@@ -62,7 +81,7 @@
                   <td>{{ item.guardian_name or '-' }}<br><small>{{ item.guardian_phone or '未绑定手机号' }}</small></td>
                   <td>{% for enrollment in item.enrollments %}{{ enrollment.campus.name }}{% if not loop.last %}<br>{% endif %}{% else %}-{% endfor %}</td>
                   <td><code>{{ item.binding_code or '已绑定' }}</code></td>
-                  <td class="actions"><a href="/admin/students/{{ item.id }}/edit">编辑</a><form method="post" action="/admin/students/{{ item.id }}/delete" class="inline-form"><button class="danger">删除</button></form></td>
+                  <td class="actions"><div class="action-group"><a class="action-link action-edit" href="/admin/students/{{ item.id }}/edit">编辑</a><form method="post" action="/admin/students/{{ item.id }}/delete" class="inline-form"><button class="action-link action-delete">删除</button></form></div></td>
                 </tr>
                 {% elif resource == 'enrollments' %}
                 <tr>
@@ -70,7 +89,7 @@
                   <td>{{ item.campus.name }}</td>
                   <td>{{ item.service_type }}</td>
                   <td>{{ item.started_on or '-' }}</td>
-                  <td>{{ '有效' if item.status == 'active' else item.status }}</td>
+                  <td><span class="badge {{ 'bg-green-lt text-green' if item.status == 'active' else 'bg-secondary-lt text-secondary' }}">{{ '有效' if item.status == 'active' else '已结束' if item.status == 'completed' else item.status }}</span></td>
                 </tr>
                 {% else %}
                 <tr>
@@ -80,14 +99,15 @@
                   <td>{{ item.service_type }}</td>
                   <td>{{ item.recorder.display_name if item.recorder else '平台管理员' }}</td>
                   <td>{{ item.note or '-' }}</td>
-                  <td class="actions"><form method="post" action="/admin/visits/{{ item.id }}/delete" class="inline-form"><button class="danger">删除</button></form></td>
+                  <td class="actions"><div class="action-group"><form method="post" action="/admin/visits/{{ item.id }}/delete" class="inline-form"><button class="action-link action-delete">删除</button></form></div></td>
                 </tr>
                 {% endif %}
               {% else %}
               <tr><td colspan="7">暂无数据</td></tr>
               {% endfor %}
             </tbody>
-          </table>
+          </table></div>
+          {% include "_list_pagination.html" %}
         </section>
       </section>
     </main>

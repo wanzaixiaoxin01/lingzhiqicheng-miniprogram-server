@@ -13,7 +13,7 @@
   <a class="{{ 'active' if section == 'students' else '' }}" href="/admin/students">学生管理</a>
   {% endif %}
   {% if admin_role in ['admin', 'manager', 'teacher'] %}
-  <a class="{{ 'active' if section == 'visits' else '' }}" href="/admin/visits">上课记录</a>
+  <a class="{{ 'active' if section == 'visits' else '' }}" href="/admin/visits">上课点名</a>
   {% endif %}
   <form method="post" action="/admin/logout"><button type="submit">退出登录</button></form>
 </nav>

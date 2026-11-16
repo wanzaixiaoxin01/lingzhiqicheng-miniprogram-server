@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import models, repositories
+from app.admin_pagination import pagination_context
 from app.auth import AdminIdentity, ROLE_ADMIN, ROLE_MANAGER, hash_password, require_admin
 from app.config import settings
 from app.db import get_db
@@ -140,18 +141,33 @@ def validate_staff_campuses(db: Session, current: AdminIdentity, campus_ids: lis
 
 
 @router.get("/staff")
-def list_staff(request: Request, db: Session = Depends(get_db)):
+def list_staff(
+    request: Request,
+    search: str = "",
+    status: str = "",
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
     current = ensure_access(request, "staff")
-    items = repositories.list_staff(db, scoped_campus_ids(db, current))
-    if current.role != ROLE_ADMIN:
-        items = [item for item in items if item.role == "teacher"]
+    filters = {"search": search.strip(), "status": status.strip()}
+    result = repositories.list_staff_page(
+        db,
+        scoped_campus_ids(db, current),
+        roles={"teacher"} if current.role != ROLE_ADMIN else None,
+        page=page,
+        page_size=10,
+        **filters,
+    )
     return render(
         request,
         "operations_list.html",
         {
             "resource": "staff",
             "title": "老师管理",
-            "items": items,
+            "items": result.items,
+            "filters": filters,
+            "status_options": [("active", "启用"), ("disabled", "停用")],
+            **pagination_context(result, "/admin/staff", filters),
         },
     )
 
@@ -269,15 +285,32 @@ def delete_staff(item_id: str, request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/students")
-def list_students(request: Request, db: Session = Depends(get_db)):
+def list_students(
+    request: Request,
+    search: str = "",
+    status: str = "",
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
     current = ensure_access(request, "students")
+    filters = {"search": search.strip(), "status": status.strip()}
+    result = repositories.list_scoped_students_page(
+        db,
+        scoped_campus_ids(db, current),
+        page=page,
+        page_size=10,
+        **filters,
+    )
     return render(
         request,
         "operations_list.html",
         {
             "resource": "students",
             "title": "学生管理",
-            "items": repositories.list_scoped_students(db, scoped_campus_ids(db, current)),
+            "items": result.items,
+            "filters": filters,
+            "status_options": [("active", "在读"), ("inactive", "停读")],
+            **pagination_context(result, "/admin/students", filters),
         },
     )
 
@@ -413,15 +446,32 @@ def delete_student(item_id: str, request: Request, db: Session = Depends(get_db)
 
 
 @router.get("/enrollments")
-def list_enrollments(request: Request, db: Session = Depends(get_db)):
+def list_enrollments(
+    request: Request,
+    search: str = "",
+    status: str = "",
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
     current = ensure_access(request, "enrollments")
+    filters = {"search": search.strip(), "status": status.strip()}
+    result = repositories.list_scoped_enrollments_page(
+        db,
+        scoped_campus_ids(db, current),
+        page=page,
+        page_size=10,
+        **filters,
+    )
     return render(
         request,
         "operations_list.html",
         {
             "resource": "enrollments",
             "title": "学生报名",
-            "items": repositories.list_scoped_enrollments(db, scoped_campus_ids(db, current)),
+            "items": result.items,
+            "filters": filters,
+            "status_options": [("active", "有效"), ("completed", "已结束")],
+            **pagination_context(result, "/admin/enrollments", filters),
         },
     )
 
@@ -464,22 +514,109 @@ async def create_enrollment(request: Request, db: Session = Depends(get_db)):
 
 
 @router.get("/visits")
-def list_visits(request: Request, db: Session = Depends(get_db), attendance_date: str = ""):
+def list_visits(
+    request: Request,
+    attendance_date: str = "",
+    campus_id: str = "",
+    search: str = "",
+    page: int = 1,
+    db: Session = Depends(get_db),
+):
     current = ensure_access(request, "visits")
-    items = list(repositories.list_scoped_attendance(db, scoped_campus_ids(db, current)))
-    selected_date = parse_date(attendance_date)
-    if selected_date:
-        items = [item for item in items if item.attendance_date == selected_date]
+    allowed_ids = scoped_campus_ids(db, current)
+    campuses = list(db.scalars(select(models.Campus).order_by(models.Campus.name)).all())
+    if allowed_ids is not None:
+        campuses = [campus for campus in campuses if campus.id in allowed_ids]
+    if campus_id and campus_id not in {campus.id for campus in campuses}:
+        raise HTTPException(status_code=403, detail="没有权限访问该网点")
+    selected_campus_id = campus_id or (campuses[0].id if campuses else "")
+    selected_date = parse_date(attendance_date, date.today())
+    filters = {
+        "search": search.strip(),
+        "attendance_date": selected_date.isoformat(),
+        "campus_id": selected_campus_id,
+    }
+    if selected_campus_id:
+        result = repositories.list_roll_call_roster(
+            db,
+            selected_campus_id,
+            selected_date,
+            search=filters["search"],
+            page=page,
+            page_size=10,
+        )
+    else:
+        result = repositories.RollCallPage([], 0, 1, 10, 1, 0, 0, 0, 0)
     return render(
         request,
-        "operations_list.html",
+        "attendance_roll_call.html",
         {
             "resource": "visits",
-            "title": "上课记录",
-            "items": items,
-            "selected_date": attendance_date,
+            "items": result.items,
+            "campuses": campuses,
+            "selected_campus_id": selected_campus_id,
+            "selected_date": selected_date.isoformat(),
+            "search": filters["search"],
+            "expected_count": result.expected_count,
+            "morning_count": result.morning_count,
+            "afternoon_count": result.afternoon_count,
+            "full_day_count": result.full_day_count,
+            **pagination_context(result, "/admin/visits", filters),
         },
     )
+
+
+def attendance_summary(morning_present: bool, afternoon_present: bool) -> str:
+    if morning_present and afternoon_present:
+        return "全天已到"
+    if morning_present:
+        return "上午已到"
+    if afternoon_present:
+        return "下午已到"
+    return "今日未到"
+
+
+@router.post("/visits/check-in")
+async def check_in_visit(request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "visits")
+    form = await request.form()
+    student_id = text(form, "student_id")
+    campus_id = text(form, "campus_id")
+    selected_date = parse_date(text(form, "attendance_date"))
+    period = text(form, "period")
+    present_text = text(form, "present").lower()
+    if selected_date is None or present_text not in {"true", "false"}:
+        raise HTTPException(status_code=400, detail="点名参数无效")
+    if not campus_allowed(db, current, campus_id):
+        raise HTTPException(status_code=403, detail="没有权限管理该网点")
+    try:
+        record = repositories.set_roll_call_attendance(
+            db,
+            student_id=student_id,
+            campus_id=campus_id,
+            attendance_date=selected_date,
+            period=period,
+            present=present_text == "true",
+            recorded_by=current.id,
+        )
+    except ValueError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    morning_present = bool(record and record.morning_present)
+    afternoon_present = bool(record and record.afternoon_present)
+    db.commit()
+    totals = repositories.list_roll_call_roster(
+        db, campus_id, selected_date, page=1, page_size=1
+    )
+    return {
+        "morning_present": morning_present,
+        "afternoon_present": afternoon_present,
+        "summary": attendance_summary(morning_present, afternoon_present),
+        "expected_count": totals.expected_count,
+        "morning_count": totals.morning_count,
+        "afternoon_count": totals.afternoon_count,
+        "full_day_count": totals.full_day_count,
+    }
 
 
 @router.get("/visits/new")

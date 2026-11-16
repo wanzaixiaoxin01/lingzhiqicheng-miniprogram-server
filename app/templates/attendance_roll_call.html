@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>学生点名 · 灵智启程后台</title>
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-8">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/static/logo.png" alt="灵智启程">
+          <div><b>灵智启程</b><span>运营后台</span></div>
+        </div>
+        {% include "_nav.html" %}
+      </aside>
+
+      <section class="workspace roll-call-page" data-roll-call-root data-check-in-url="/admin/visits/check-in">
+        <header>
+          <div>
+            <h1>学生点名</h1>
+            <p>选择日期和网点，在学生格子内完成上午、下午签到。</p>
+          </div>
+          <div class="roll-call-today">点名日期 <strong>{{ selected_date }}</strong></div>
+        </header>
+
+        <form class="card mb-3" method="get" action="/admin/visits">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col-md-2">
+                <label class="form-label">点名日期</label>
+                <input class="form-control" type="date" name="attendance_date" value="{{ selected_date }}">
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">智习室网点</label>
+                <select class="form-select" name="campus_id">
+                  {% for campus in campuses %}
+                  <option value="{{ campus.id }}" {{ 'selected' if campus.id == selected_campus_id else '' }}>{{ campus.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col">
+                <label class="form-label">搜索学生或家长</label>
+                <input class="form-control" name="search" value="{{ search }}" placeholder="输入学生、家长姓名或手机号">
+              </div>
+              <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
+              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/visits">重置</a></div>
+            </div>
+          </div>
+        </form>
+
+        <section class="roll-call-metrics">
+          <article><span>今日应到</span><div><b data-total="expected">{{ expected_count }}</b><small>名学生</small></div></article>
+          <article class="morning"><span>上午已到</span><div><b data-total="morning">{{ morning_count }}</b><small data-rate="morning">到课率 {{ ((morning_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="afternoon"><span>下午已到</span><div><b data-total="afternoon">{{ afternoon_count }}</b><small data-rate="afternoon">到课率 {{ ((afternoon_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="full-day"><span>全天到课</span><div><b data-total="full-day">{{ full_day_count }}</b><small>上午、下午均到</small></div></article>
+        </section>
+
+        <section class="card roll-call-roster">
+          <div class="roll-call-roster-head">
+            <div><strong>{{ (campuses | selectattr('id', 'equalto', selected_campus_id) | map(attribute='name') | first) or '学生' }}点名册</strong><span>共 {{ expected_count }} 人</span></div>
+            <small><i></i>点击后立即保存，再次点击可撤销</small>
+          </div>
+
+          {% if items %}
+          <div class="student-card-grid">
+            {% for item in items %}
+            {% set full = item.morning_present and item.afternoon_present %}
+            {% set half = item.morning_present or item.afternoon_present %}
+            <article class="student-card" data-student-card data-student-id="{{ item.student.id }}">
+              <span class="student-card-status {{ 'is-full' if full else 'is-half' if half else 'is-none' }}" data-summary>
+                {{ '全天已到' if full else '上午已到' if item.morning_present else '下午已到' if item.afternoon_present else '今日未到' }}
+              </span>
+              <h3>{{ item.student.name }}</h3>
+              <p>{{ item.student.school or '未填写学校' }} · {{ item.student.grade }}</p>
+              <div class="student-guardian"><strong>{{ item.student.guardian_name or '未填写家长' }}</strong><span></span><em>{{ item.student.guardian_phone or '未填写手机号' }}</em></div>
+              <div class="student-check-actions">
+                <button class="student-check-button {{ 'is-present' if item.morning_present else '' }}" type="button" data-period="morning" data-present="{{ 'true' if item.morning_present else 'false' }}">
+                  <i>{{ '✓' if item.morning_present else '' }}</i><span>{{ '上午已签' if item.morning_present else '上午签到' }}</span>
+                </button>
+                <button class="student-check-button {{ 'is-present' if item.afternoon_present else '' }}" type="button" data-period="afternoon" data-present="{{ 'true' if item.afternoon_present else 'false' }}">
+                  <i>{{ '✓' if item.afternoon_present else '' }}</i><span>{{ '下午已签' if item.afternoon_present else '下午签到' }}</span>
+                </button>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="roll-call-empty">当前网点没有符合条件的学生</div>
+          {% endif %}
+
+          {% include "_list_pagination.html" %}
+        </section>
+
+        <div class="copy-toast" role="status" aria-live="polite" data-roll-call-toast>点名已保存</div>
+        <input type="hidden" value="{{ selected_campus_id }}" data-campus-id>
+        <input type="hidden" value="{{ selected_date }}" data-attendance-date>
+      </section>
+    </main>
+    <script type="module" src="/static/attendance-roll-call.js?v=20261116-2"></script>
+  </body>
+</html>
