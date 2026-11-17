@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>学习机海报管理 · 灵智启程后台</title>
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261117-1">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="brand"><img src="/static/logo.png" alt="灵智启程"><div><b>灵智启程</b><span>运营后台</span></div></div>
+        {% include "_nav.html" %}
+      </aside>
+      <section class="workspace">
+        <header>
+          <div><h1>学习机海报管理</h1><p>小程序按这里的顺序展示海报，保存后无需重新发布小程序。</p></div>
+        </header>
+
+        <form class="card mb-3" method="post" enctype="multipart/form-data" action="/admin/learning-machine-posters">
+          <div class="card-body">
+            <div class="row g-3 align-items-end">
+              <div class="col"><label class="form-label">上传海报</label><input class="form-control" type="file" name="files" accept=".jpg,.jpeg,.png,.webp" multiple required><small class="form-hint">支持 JPG、PNG、WEBP；单张不超过 10 MB，最多配置 20 张。</small></div>
+              <div class="col-auto"><button class="btn btn-primary" type="submit">上传并发布</button></div>
+            </div>
+          </div>
+        </form>
+
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">当前海报</h2><span class="text-secondary ms-auto">共 {{ posters|length }} 张</span></div>
+          {% if posters %}
+          <div class="learning-poster-grid">
+            {% for poster in posters %}
+            <article class="learning-poster-card">
+              <div class="learning-poster-index">{{ '%02d'|format(loop.index) }}</div>
+              <img src="{{ poster.url }}" alt="{{ poster.name }}">
+              <div class="learning-poster-meta"><strong>{{ poster.name }}</strong><small>第 {{ loop.index }} 张</small></div>
+              <div class="learning-poster-actions">
+                <form method="post" action="/admin/learning-machine-posters/{{ poster.id }}/move"><input type="hidden" name="direction" value="up"><button class="action-link action-edit" {{ 'disabled' if loop.first else '' }}>上移</button></form>
+                <form method="post" action="/admin/learning-machine-posters/{{ poster.id }}/move"><input type="hidden" name="direction" value="down"><button class="action-link action-edit" {{ 'disabled' if loop.last else '' }}>下移</button></form>
+                <form method="post" action="/admin/learning-machine-posters/{{ poster.id }}/delete"><button class="action-link action-delete">删除</button></form>
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty-state">尚未配置学习机海报，小程序将展示默认空状态。</div>
+          {% endif %}
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

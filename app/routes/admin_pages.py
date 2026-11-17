@@ -27,6 +27,10 @@ from app.domain.staff_access import can_access_resource
 from app.paths import TEMPLATES_DIR
 from app.services.campus_image_storage import campus_image_storage
 from app.services.material_storage import material_storage
+from app.services.poster_image_storage import poster_image_storage
+
+
+LEARNING_MACHINE_POSTERS_KEY = "learning_machine_posters"
 
 
 def display_resource_status(resource: str, item: Any) -> str:
@@ -185,6 +189,119 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     metrics = repositories.dashboard_metrics(db) if is_platform_admin else repositories.dashboard_operations_metrics(
         db, repositories.staff_campus_ids(db, getattr(request.state.admin_identity, "id", None))
     )
+
+
+def learning_machine_setting(db: Session) -> models.Setting:
+    item = db.get(models.Setting, LEARNING_MACHINE_POSTERS_KEY)
+    if item is None:
+        item = models.Setting(key=LEARNING_MACHINE_POSTERS_KEY, value={"posters": []})
+        db.add(item)
+        db.flush()
+    return item
+
+
+def learning_machine_posters(item: models.Setting) -> list[dict[str, str]]:
+    value = item.value if isinstance(item.value, dict) else {}
+    posters = value.get("posters")
+    return [poster for poster in posters if isinstance(poster, dict)] if isinstance(posters, list) else []
+
+
+def poster_storage_name(url: str) -> str | None:
+    prefix = "/uploads/learning-machine/"
+    return url[len(prefix):] if url.startswith(prefix) else None
+
+
+@protected_router.get("/learning-machine-posters")
+def learning_machine_poster_page(request: Request, db: Session = Depends(get_db)):
+    ensure_resource_access(request, "learning_machine_posters")
+    item = learning_machine_setting(db)
+    db.commit()
+    return templates.TemplateResponse(
+        request,
+        "learning_machine_posters.html",
+        {
+            "section": "learning_machine_posters",
+            "admin_role": admin_role(request),
+            "posters": learning_machine_posters(item),
+        },
+    )
+
+
+@protected_router.post("/learning-machine-posters")
+async def upload_learning_machine_posters(request: Request, db: Session = Depends(get_db)):
+    ensure_resource_access(request, "learning_machine_posters")
+    form_data = await request.form()
+    uploads = [
+        upload
+        for upload in form_data.getlist("files")
+        if isinstance(upload, UploadFile) and upload.filename
+    ]
+    if not uploads:
+        raise HTTPException(status_code=400, detail="请选择学习机海报")
+    item = learning_machine_setting(db)
+    posters = learning_machine_posters(item)
+    if len(posters) + len(uploads) > 20:
+        raise HTTPException(status_code=400, detail="学习机海报最多配置 20 张")
+    saved_names = []
+    try:
+        for upload in uploads:
+            _, storage_name, _ = await poster_image_storage.save_upload(upload)
+            saved_names.append(storage_name)
+            posters.append(
+                {
+                    "id": models.new_id(),
+                    "name": Path(upload.filename or "学习机海报").stem,
+                    "url": poster_image_storage.url_for(storage_name),
+                }
+            )
+        item.value = {"posters": posters}
+        db.commit()
+    except ValueError as exc:
+        db.rollback()
+        for storage_name in saved_names:
+            poster_image_storage.remove(storage_name)
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:
+        db.rollback()
+        for storage_name in saved_names:
+            poster_image_storage.remove(storage_name)
+        raise
+    return redirect("/admin/learning-machine-posters")
+
+
+@protected_router.post("/learning-machine-posters/{poster_id}/move")
+async def move_learning_machine_poster(
+    poster_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    ensure_resource_access(request, "learning_machine_posters")
+    form_data = await request.form()
+    direction = text(form_data, "direction")
+    item = learning_machine_setting(db)
+    posters = learning_machine_posters(item)
+    index = next((i for i, poster in enumerate(posters) if poster.get("id") == poster_id), -1)
+    target = index - 1 if direction == "up" else index + 1
+    if index >= 0 and 0 <= target < len(posters):
+        posters[index], posters[target] = posters[target], posters[index]
+        item.value = {"posters": posters}
+        db.commit()
+    return redirect("/admin/learning-machine-posters")
+
+
+@protected_router.post("/learning-machine-posters/{poster_id}/delete")
+def delete_learning_machine_poster(poster_id: str, request: Request, db: Session = Depends(get_db)):
+    ensure_resource_access(request, "learning_machine_posters")
+    item = learning_machine_setting(db)
+    posters = learning_machine_posters(item)
+    removed = next((poster for poster in posters if poster.get("id") == poster_id), None)
+    if removed:
+        item.value = {"posters": [poster for poster in posters if poster.get("id") != poster_id]}
+        db.commit()
+        storage_name = poster_storage_name(str(removed.get("url") or ""))
+        if storage_name:
+            poster_image_storage.remove(storage_name)
+    return redirect("/admin/learning-machine-posters")
     return templates.TemplateResponse(
         request,
         "dashboard.html",

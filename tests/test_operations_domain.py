@@ -44,11 +44,14 @@ class OperationsDomainTest(unittest.TestCase):
         self.assertFalse(can_access_resource(ROLE_MANAGER, "enrollments"))
         self.assertFalse(can_access_resource(ROLE_ADMIN, "settings"))
         self.assertTrue(can_access_resource(ROLE_ADMIN, "banners"))
+        self.assertTrue(can_access_resource(ROLE_ADMIN, "learning_machine_posters"))
+        self.assertFalse(can_access_resource(ROLE_MANAGER, "learning_machine_posters"))
         self.assertNotIn("courses", menu_resources(ROLE_ADMIN))
         self.assertNotIn("banners", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_MANAGER))
         self.assertNotIn("settings", menu_resources(ROLE_ADMIN))
+        self.assertIn("learning_machine_posters", menu_resources(ROLE_ADMIN))
 
     def test_student_enrollment_and_attendance_have_service_point_links(self):
         campus = Campus(

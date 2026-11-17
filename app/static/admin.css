@@ -827,3 +827,43 @@ th {
   background: #fff1f4;
   color: #d92d47;
 }
+.learning-poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+.learning-poster-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e5eaf1;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.learning-poster-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  background: #f4f6f8;
+}
+
+.learning-poster-index {
+  position: absolute;
+  z-index: 1;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #fff;
+  background: rgba(13, 34, 63, .76);
+  font-weight: 700;
+}
+
+.learning-poster-meta { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px 8px; }
+.learning-poster-meta small { color: #7a8798; }
+.learning-poster-actions { display: flex; gap: 16px; padding: 8px 16px 16px; }
+.learning-poster-actions form { margin: 0; }
+.learning-poster-actions button:disabled { color: #b3bdc9; cursor: default; }

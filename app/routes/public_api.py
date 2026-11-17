@@ -34,6 +34,30 @@ from app.services.wechat_phone import WechatPhoneError, exchange_phone_code
 
 
 router = APIRouter()
+LEARNING_MACHINE_POSTERS_KEY = "learning_machine_posters"
+
+
+def learning_machine_payload(item, base_url: str | None = None) -> dict[str, list[dict[str, str]]]:
+    value = getattr(item, "value", None)
+    posters = value.get("posters") if isinstance(value, dict) else None
+    if not isinstance(posters, list):
+        return {"posters": []}
+    asset_base_url = (base_url or settings.public_base_url).rstrip("/")
+    result = []
+    for poster in posters:
+        if not isinstance(poster, dict) or not poster.get("url"):
+            continue
+        url = str(poster["url"])
+        if url.startswith("/") and asset_base_url:
+            url = f"{asset_base_url}{url}"
+        result.append(
+            {
+                "id": str(poster.get("id") or ""),
+                "name": str(poster.get("name") or "学习机海报"),
+                "url": url,
+            }
+        )
+    return {"posters": result}
 
 
 @router.get("/home")
@@ -44,6 +68,12 @@ def get_home(db: Session = Depends(get_db)) -> dict[str, list]:
         "courses": [CourseOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_courses(db)[:6]],
         "articles": [ArticleOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_articles(db)[:6]],
     }
+
+
+@router.get("/learning-machine-posters")
+def get_learning_machine_posters(request: Request, db: Session = Depends(get_db)) -> dict[str, list[dict[str, str]]]:
+    base_url = settings.public_base_url or str(request.base_url).rstrip("/")
+    return learning_machine_payload(db.get(models.Setting, LEARNING_MACHINE_POSTERS_KEY), base_url)
 
 
 @router.get("/campuses")

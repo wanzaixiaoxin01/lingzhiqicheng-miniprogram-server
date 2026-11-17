@@ -95,6 +95,8 @@ def seed() -> None:
 
         if db.get(models.Setting, "service_phone") is None:
             db.add(models.Setting(key="service_phone", value={"text": "请在后台配置客服电话"}))
+        if db.get(models.Setting, "learning_machine_posters") is None:
+            db.add(models.Setting(key="learning_machine_posters", value={"posters": []}))
 
         db.commit()
     finally:

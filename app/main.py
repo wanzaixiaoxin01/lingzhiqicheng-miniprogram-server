@@ -5,6 +5,7 @@ from app.db import init_db
 from app.paths import STATIC_DIR
 from app.routes import admin_pages, operations_admin, public_api
 from app.services.campus_image_storage import campus_image_storage
+from app.services.poster_image_storage import poster_image_storage
 
 
 def create_app() -> FastAPI:
@@ -18,6 +19,11 @@ def create_app() -> FastAPI:
         "/uploads/campuses",
         StaticFiles(directory=campus_image_storage.root, check_dir=False),
         name="campus-uploads",
+    )
+    app.mount(
+        "/uploads/learning-machine",
+        StaticFiles(directory=poster_image_storage.root, check_dir=False),
+        name="learning-machine-uploads",
     )
 
     @app.get("/health")
