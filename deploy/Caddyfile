@@ -1,20 +1,43 @@
 admin.lingzhiqicheng.com {
   encode zstd gzip
 
-  @root path /
-  redir @root /admin/ 302
+  handle / {
+    redir /admin/ 302
+  }
 
-  @backend path /admin /admin/* /static/* /uploads/campuses/*
-  reverse_proxy @backend api:4000
+  handle /admin* {
+    reverse_proxy api:4000
+  }
 
-  respond "Not Found" 404
+  handle /static/* {
+    reverse_proxy api:4000
+  }
+
+  handle /uploads/campuses/* {
+    reverse_proxy api:4000
+  }
+
+  handle {
+    respond "Not Found" 404
+  }
 }
 
 api.lingzhiqicheng.com, api-test.lingzhiqicheng.com {
   encode zstd gzip
 
-  @public path /api/public/* /uploads/campuses/* /health
-  reverse_proxy @public api:4000
+  handle /api/public/* {
+    reverse_proxy api:4000
+  }
 
-  respond "Not Found" 404
+  handle /uploads/campuses/* {
+    reverse_proxy api:4000
+  }
+
+  handle /health {
+    reverse_proxy api:4000
+  }
+
+  handle {
+    respond "Not Found" 404
+  }
 }
