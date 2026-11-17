@@ -360,7 +360,7 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
         models.StudentEnrollment(
             student_id=student.id,
             campus_id=campus_id,
-            service_type=text(form, "service_type", "智习室学习"),
+            service_type=text(form, "service_type", "自习场地服务"),
             started_on=parse_date(text(form, "started_on"), date.today()),
             status="active",
         )
@@ -393,7 +393,7 @@ def edit_student(item_id: str, request: Request, db: Session = Depends(get_db)):
             "item": item,
             "campuses": campuses,
             "selected_campus": first_enrollment.campus_id if first_enrollment else "",
-            "selected_service_type": first_enrollment.service_type if first_enrollment else "智习室学习",
+            "selected_service_type": first_enrollment.service_type if first_enrollment else "自习场地服务",
         },
     )
 
@@ -422,7 +422,7 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
     if campus_id:
         enrollment = item.enrollments[0] if item.enrollments else models.StudentEnrollment(student_id=item.id)
         enrollment.campus_id = campus_id
-        enrollment.service_type = text(form, "service_type", enrollment.service_type or "智习室学习")
+        enrollment.service_type = text(form, "service_type", enrollment.service_type or "自习场地服务")
         enrollment.started_on = parse_date(text(form, "started_on"), enrollment.started_on or date.today())
         enrollment.status = "active"
         if enrollment.id is None:
@@ -503,7 +503,7 @@ async def create_enrollment(request: Request, db: Session = Depends(get_db)):
     enrollment = models.StudentEnrollment(
         student_id=student_id,
         campus_id=campus_id,
-        service_type=text(form, "service_type", "智习室学习"),
+        service_type=text(form, "service_type", "自习场地服务"),
         started_on=parse_date(text(form, "started_on"), date.today()),
         ended_on=parse_date(text(form, "ended_on")),
         status=text(form, "status", "active"),
@@ -631,7 +631,7 @@ def new_visit(request: Request, db: Session = Depends(get_db)):
         "operations_form.html",
         {
             "resource": "visits",
-            "title": "登记上课记录",
+            "title": "登记到店记录",
             "item": None,
             "campuses": campuses,
             "students": repositories.list_scoped_students(db, campus_ids),
@@ -653,7 +653,7 @@ async def create_visit(request: Request, db: Session = Depends(get_db)):
         student_id=student_id,
         campus_id=campus_id,
         attendance_date=parse_date(text(form, "attendance_date"), date.today()),
-        service_type=text(form, "service_type", "智习室学习"),
+        service_type=text(form, "service_type", "自习场地服务"),
         recorded_by=current.id,
         note=text(form, "note") or None,
     )

@@ -58,7 +58,7 @@ function updateTotals(root, payload) {
   ["morning", "afternoon"].forEach((period) => {
     const element = root.querySelector(`[data-rate="${period}"]`);
     const count = Number(payload[`${period}_count`]) || 0;
-    if (element) element.textContent = `到课率 ${attendanceRate(count, expected)}`;
+    if (element) element.textContent = `到店率 ${attendanceRate(count, expected)}`;
   });
 }
 

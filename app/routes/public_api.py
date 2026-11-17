@@ -68,7 +68,7 @@ def get_courses(category: str | None = None, db: Session = Depends(get_db)) -> l
 def get_course(course_id: str, db: Session = Depends(get_db)) -> CourseOut:
     course = repositories.get_published_course(db, course_id)
     if course is None:
-        raise HTTPException(status_code=404, detail="课程不存在")
+        raise HTTPException(status_code=404, detail="活动不存在")
     return CourseOut.model_validate(course)
 
 
@@ -111,7 +111,7 @@ def get_materials(db: Session = Depends(get_db)) -> list[dict]:
 def get_material(material_id: str, db: Session = Depends(get_db)) -> dict:
     material = repositories.get_published_material(db, material_id)
     if material is None:
-        raise HTTPException(status_code=404, detail="学习资料不存在")
+        raise HTTPException(status_code=404, detail="空间公告不存在")
     return material_payload(material)
 
 
@@ -119,9 +119,9 @@ def get_material(material_id: str, db: Session = Depends(get_db)) -> dict:
 def download_material(material_id: str, db: Session = Depends(get_db)) -> FileResponse:
     material = repositories.get_published_material(db, material_id)
     if material is None:
-        raise HTTPException(status_code=404, detail="学习资料不存在")
+        raise HTTPException(status_code=404, detail="空间公告不存在")
     if not material_storage.exists(material.storage_name):
-        raise HTTPException(status_code=404, detail="资料文件不存在")
+        raise HTTPException(status_code=404, detail="公告文件不存在")
 
     material.download_count += 1
     db.commit()

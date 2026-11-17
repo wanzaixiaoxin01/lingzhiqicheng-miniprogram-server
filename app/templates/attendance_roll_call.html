@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>学生点名 · 灵智启程后台</title>
+    <title>到店点名 · 灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
     <link rel="stylesheet" href="/static/admin.css?v=20261116-8">
   </head>
@@ -20,8 +20,8 @@
       <section class="workspace roll-call-page" data-roll-call-root data-check-in-url="/admin/visits/check-in">
         <header>
           <div>
-            <h1>学生点名</h1>
-            <p>选择日期和网点，在学生格子内完成上午、下午签到。</p>
+            <h1>到店点名</h1>
+            <p>选择日期和网点，在学生格子内记录上午、下午到店情况。</p>
           </div>
           <div class="roll-call-today">点名日期 <strong>{{ selected_date }}</strong></div>
         </header>
@@ -53,14 +53,14 @@
 
         <section class="roll-call-metrics">
           <article><span>今日应到</span><div><b data-total="expected">{{ expected_count }}</b><small>名学生</small></div></article>
-          <article class="morning"><span>上午已到</span><div><b data-total="morning">{{ morning_count }}</b><small data-rate="morning">到课率 {{ ((morning_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
-          <article class="afternoon"><span>下午已到</span><div><b data-total="afternoon">{{ afternoon_count }}</b><small data-rate="afternoon">到课率 {{ ((afternoon_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
-          <article class="full-day"><span>全天到课</span><div><b data-total="full-day">{{ full_day_count }}</b><small>上午、下午均到</small></div></article>
+          <article class="morning"><span>上午已到</span><div><b data-total="morning">{{ morning_count }}</b><small data-rate="morning">到店率 {{ ((morning_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="afternoon"><span>下午已到</span><div><b data-total="afternoon">{{ afternoon_count }}</b><small data-rate="afternoon">到店率 {{ ((afternoon_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="full-day"><span>全天到店</span><div><b data-total="full-day">{{ full_day_count }}</b><small>上午、下午均到</small></div></article>
         </section>
 
         <section class="card roll-call-roster">
           <div class="roll-call-roster-head">
-            <div><strong>{{ (campuses | selectattr('id', 'equalto', selected_campus_id) | map(attribute='name') | first) or '学生' }}点名册</strong><span>共 {{ expected_count }} 人</span></div>
+            <div><strong>{{ (campuses | selectattr('id', 'equalto', selected_campus_id) | map(attribute='name') | first) or '学生' }}到店名单</strong><span>共 {{ expected_count }} 人</span></div>
             <small><i></i>点击后立即保存，再次点击可撤销</small>
           </div>
 

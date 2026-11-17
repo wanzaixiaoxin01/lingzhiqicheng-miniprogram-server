@@ -64,9 +64,9 @@ templates.env.globals.update(
     resource_title=lambda resource: {
         "banners": "Banner 管理",
         "campuses": "智习室网点管理",
-        "courses": "课程管理",
+        "courses": "兴趣活动管理",
         "articles": "文章/活动管理",
-        "materials": "学习资料文件",
+        "materials": "空间公告文件",
         "leads": "预约线索",
         "settings": "系统配置",
     }.get(resource, resource),
@@ -86,13 +86,13 @@ templates.env.globals["status_options"] = lambda selected: Markup(
 templates.env.globals["article_type_options"] = lambda selected: Markup(
     "".join(
         f'<option value="{value}" {"selected" if selected == value else ""}>{label}</option>'
-        for value, label in [("material", "学习资料"), ("news", "教育动态"), ("activity", "活动风采")]
+        for value, label in [("material", "空间公告"), ("news", "品牌动态"), ("activity", "活动风采")]
     )
 )
 templates.env.globals["default_campus_business_hours"] = DEFAULT_CAMPUS_BUSINESS_HOURS
 templates.env.globals["lead_source_label"] = lambda source: {
-    "trial": "体验预约",
-    "course": "课程咨询",
+    "trial": "到店体验预约",
+    "course": "活动咨询",
     "campus": "网点咨询",
 }.get(source, source or "-")
 templates.env.globals["material_file_size"] = lambda size: (
@@ -350,7 +350,7 @@ async def create_material(form_data, db: Session) -> RedirectResponse:
         if isinstance(upload, UploadFile) and upload.filename
     ]
     if not uploads:
-        raise HTTPException(status_code=400, detail="请选择资料文件")
+        raise HTTPException(status_code=400, detail="请选择公告文件")
 
     summary = text(form_data, "summary") or None
     status = text(form_data, "status") or "published"
@@ -454,7 +454,7 @@ async def update_campus(item: models.Campus, form_data, db: Session) -> Redirect
 async def update_material(item: models.Material, form_data, db: Session) -> RedirectResponse:
     title = text(form_data, "title")
     if not title:
-        raise HTTPException(status_code=400, detail="资料标题不能为空")
+        raise HTTPException(status_code=400, detail="公告标题不能为空")
     old_storage_name = item.storage_name
     upload = form_data.get("file")
     new_storage_name = None
