@@ -189,6 +189,11 @@ def dashboard(request: Request, db: Session = Depends(get_db)):
     metrics = repositories.dashboard_metrics(db) if is_platform_admin else repositories.dashboard_operations_metrics(
         db, repositories.staff_campus_ids(db, getattr(request.state.admin_identity, "id", None))
     )
+    return templates.TemplateResponse(
+        request,
+        "dashboard.html",
+        {"metrics": metrics, "leads": leads, "section": "dashboard", "admin_role": role},
+    )
 
 
 def learning_machine_setting(db: Session) -> models.Setting:
@@ -302,11 +307,6 @@ def delete_learning_machine_poster(poster_id: str, request: Request, db: Session
         if storage_name:
             poster_image_storage.remove(storage_name)
     return redirect("/admin/learning-machine-posters")
-    return templates.TemplateResponse(
-        request,
-        "dashboard.html",
-        {"metrics": metrics, "leads": leads, "section": "dashboard", "admin_role": role},
-    )
 
 
 @protected_router.get("/{resource}")
