@@ -12,6 +12,11 @@ class CourseDeploymentConfigTest(unittest.TestCase):
         self.assertIn("handle /static/courses/*", caddyfile)
         self.assertGreaterEqual(caddyfile.count("handle /uploads/courses/*"), 2)
 
+    def test_caddy_exposes_learning_machine_posters(self):
+        caddyfile = (ROOT / "deploy/Caddyfile").read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(caddyfile.count("handle /uploads/learning-machine/*"), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
