@@ -51,7 +51,8 @@ class ServicePositioningCopyTests(unittest.TestCase):
     def test_seed_content_matches_the_service_positioning(self):
         seed = read("app/seed.py")
 
-        self.assertIn("智能设备体验活动", seed)
+        self.assertIn("编程与逻辑", seed)
+        self.assertIn("音乐与乐器", seed)
         self.assertIn("空间公告", seed)
         for old_phrase in ("体验课", "课后晚托", "作业管理", "AI 督学"):
             self.assertNotIn(old_phrase, seed)

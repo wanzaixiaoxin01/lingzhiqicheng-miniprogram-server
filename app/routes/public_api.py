@@ -37,6 +37,19 @@ router = APIRouter()
 LEARNING_MACHINE_POSTERS_KEY = "learning_machine_posters"
 
 
+def absolute_asset_url(url: str | None, base_url: str | None = None) -> str | None:
+    if not url or not url.startswith("/"):
+        return url
+    asset_base_url = (base_url or settings.public_base_url).rstrip("/")
+    return f"{asset_base_url}{url}" if asset_base_url else url
+
+
+def course_payload(course, base_url: str | None = None) -> dict:
+    payload = CourseOut.model_validate(course).model_dump(mode="json")
+    payload["cover_url"] = absolute_asset_url(payload.get("cover_url"), base_url)
+    return payload
+
+
 def learning_machine_payload(item, base_url: str | None = None) -> dict[str, list[dict[str, str]]]:
     value = getattr(item, "value", None)
     posters = value.get("posters") if isinstance(value, dict) else None
@@ -61,11 +74,12 @@ def learning_machine_payload(item, base_url: str | None = None) -> dict[str, lis
 
 
 @router.get("/home")
-def get_home(db: Session = Depends(get_db)) -> dict[str, list]:
+def get_home(request: Request, db: Session = Depends(get_db)) -> dict[str, list]:
+    base_url = settings.public_base_url or str(request.base_url).rstrip("/")
     return {
         "banners": [BannerOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_banners(db)[:5]],
         "campuses": [CampusOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_campuses(db)[:3]],
-        "courses": [CourseOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_courses(db)[:6]],
+        "courses": [course_payload(item, base_url) for item in repositories.list_published_courses(db)[:6]],
         "articles": [ArticleOut.model_validate(item).model_dump(mode="json") for item in repositories.list_published_articles(db)[:6]],
     }
 
@@ -90,16 +104,18 @@ def get_campus(campus_id: str, db: Session = Depends(get_db)) -> CampusOut:
 
 
 @router.get("/courses")
-def get_courses(category: str | None = None, db: Session = Depends(get_db)) -> list[CourseOut]:
-    return [CourseOut.model_validate(item) for item in repositories.list_published_courses(db, category)]
+def get_courses(request: Request, category: str | None = None, db: Session = Depends(get_db)) -> list[dict]:
+    base_url = settings.public_base_url or str(request.base_url).rstrip("/")
+    return [course_payload(item, base_url) for item in repositories.list_published_courses(db, category)]
 
 
 @router.get("/courses/{course_id}")
-def get_course(course_id: str, db: Session = Depends(get_db)) -> CourseOut:
+def get_course(course_id: str, request: Request, db: Session = Depends(get_db)) -> dict:
     course = repositories.get_published_course(db, course_id)
     if course is None:
         raise HTTPException(status_code=404, detail="活动不存在")
-    return CourseOut.model_validate(course)
+    base_url = settings.public_base_url or str(request.base_url).rstrip("/")
+    return course_payload(course, base_url)
 
 
 @router.get("/articles")

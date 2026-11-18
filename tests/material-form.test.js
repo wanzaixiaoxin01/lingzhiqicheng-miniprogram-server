@@ -14,7 +14,7 @@ const resourceForm = readFileSync(resolve(testRoot, "../app/templates/resource_f
 
 test("new material form accepts multiple files and explains generated titles", () => {
   assert.match(resourceForm, /name="file"[^>]*data-material-file[^>]*multiple/);
-  assert.match(resourceForm, /每个文件将创建一条资料记录，标题自动取文件名/);
+  assert.match(resourceForm, /每个文件将创建一条公告记录，标题自动取文件名/);
 });
 
 test("material title uses the selected filename without its extension", () => {

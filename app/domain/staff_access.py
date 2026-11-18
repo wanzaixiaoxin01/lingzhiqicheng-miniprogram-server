@@ -6,6 +6,7 @@ ROLE_RESOURCES = {
         "dashboard",
         "banners",
         "campuses",
+        "courses",
         "staff",
         "articles",
         "materials",
@@ -27,6 +28,7 @@ def menu_resources(role: str) -> tuple[str, ...]:
     ordered = (
         "dashboard",
         "campuses",
+        "courses",
         "staff",
         "articles",
         "materials",

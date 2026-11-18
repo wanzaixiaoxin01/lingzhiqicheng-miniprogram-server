@@ -26,6 +26,7 @@ from app.domain.campuses import DEFAULT_CAMPUS_BUSINESS_HOURS
 from app.domain.staff_access import can_access_resource
 from app.paths import TEMPLATES_DIR
 from app.services.campus_image_storage import campus_image_storage
+from app.services.course_image_storage import course_image_storage
 from app.services.material_storage import material_storage
 from app.services.poster_image_storage import poster_image_storage
 
@@ -42,6 +43,7 @@ def display_resource_status(resource: str, item: Any) -> str:
     )
     labels = {
         "campuses": {"published": "正常"},
+        "courses": {"published": "显示", "hidden": "隐藏"},
         "materials": {"published": "已发布", "draft": "草稿", "archived": "下架"},
         "leads": {
             "pending": "待跟进",
@@ -121,7 +123,7 @@ MODEL_MAP = {
 RESOURCE_STATUS_OPTIONS = {
     "banners": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
     "campuses": [("published", "正常"), ("draft", "暂停展示")],
-    "courses": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
+    "courses": [("published", "显示"), ("hidden", "隐藏")],
     "articles": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
     "materials": [("published", "已发布"), ("draft", "草稿"), ("archived", "已下架")],
 }
@@ -379,6 +381,8 @@ async def create_resource(resource: str, request: Request, db: Session = Depends
         return await create_material(form_data, db)
     if resource == "campuses":
         return await create_campus(form_data, db)
+    if resource == "courses":
+        return await create_course(form_data, db)
     form = dict(form_data)
     item = build_model(resource, form)
     db.add(item)
@@ -417,6 +421,8 @@ async def update_resource(resource: str, item_id: str, request: Request, db: Ses
         return await update_material(item, form_data, db)
     if resource == "campuses":
         return await update_campus(item, form_data, db)
+    if resource == "courses":
+        return await update_course(item, form_data, db)
     form = dict(form_data)
     apply_model_values(item, resource, form)
     db.commit()
@@ -431,7 +437,10 @@ def delete_resource(resource: str, item_id: str, request: Request, db: Session =
         raise HTTPException(status_code=404, detail="管理资源不存在")
     item = db.get(model, item_id)
     if item is not None:
+        if resource == "courses" and repositories.course_has_references(db, item_id):
+            raise HTTPException(status_code=409, detail="该兴趣活动已有预约、报名或到店记录，请改为隐藏")
         old_cover_url = item.cover_url if resource == "campuses" else None
+        old_course_cover_url = item.cover_url if resource == "courses" else None
         db.delete(item)
         db.commit()
         if resource == "materials":
@@ -440,7 +449,22 @@ def delete_resource(resource: str, item_id: str, request: Request, db: Session =
             old_storage_name = storage_name_from_url(old_cover_url)
             if old_storage_name:
                 campus_image_storage.remove(old_storage_name)
+        elif resource == "courses":
+            old_storage_name = course_storage_name_from_url(old_course_cover_url)
+            if old_storage_name:
+                course_image_storage.remove(old_storage_name)
     return redirect(f"/admin/{resource}")
+
+
+@protected_router.post("/courses/{item_id}/visibility")
+def update_course_visibility(item_id: str, request: Request, db: Session = Depends(get_db)):
+    ensure_resource_access(request, "courses")
+    item = db.get(models.Course, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="兴趣活动不存在")
+    item.status = "hidden" if item.status == "published" else "published"
+    db.commit()
+    return redirect("/admin/courses")
 
 
 @protected_router.post("/leads/{item_id}/status")
@@ -510,6 +534,64 @@ def storage_name_from_url(url: str | None) -> str | None:
     if not url or not url.startswith(prefix):
         return None
     return url[len(prefix):]
+
+
+def course_storage_name_from_url(url: str | None) -> str | None:
+    prefix = "/uploads/courses/"
+    if not url or not url.startswith(prefix):
+        return None
+    return url[len(prefix):]
+
+
+async def create_course(form_data, db: Session) -> RedirectResponse:
+    values = course_values(dict(form_data))
+    upload = form_data.get("cover_file")
+    storage_name = None
+    if isinstance(upload, UploadFile) and upload.filename:
+        try:
+            _, storage_name, _ = await course_image_storage.save_upload(upload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        values["cover_url"] = course_image_storage.url_for(storage_name)
+    if not values["cover_url"]:
+        raise HTTPException(status_code=400, detail="请上传活动封面")
+    try:
+        db.add(models.Course(**values))
+        db.commit()
+    except Exception:
+        db.rollback()
+        if storage_name:
+            course_image_storage.remove(storage_name)
+        raise
+    return redirect("/admin/courses")
+
+
+async def update_course(item: models.Course, form_data, db: Session) -> RedirectResponse:
+    old_cover_url = item.cover_url
+    values = course_values(dict(form_data))
+    upload = form_data.get("cover_file")
+    storage_name = None
+    if isinstance(upload, UploadFile) and upload.filename:
+        try:
+            _, storage_name, _ = await course_image_storage.save_upload(upload)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        values["cover_url"] = course_image_storage.url_for(storage_name)
+    else:
+        values["cover_url"] = old_cover_url
+    for key, value in values.items():
+        setattr(item, key, value)
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        if storage_name:
+            course_image_storage.remove(storage_name)
+        raise
+    old_storage_name = course_storage_name_from_url(old_cover_url)
+    if storage_name and old_storage_name:
+        course_image_storage.remove(old_storage_name)
+    return redirect("/admin/courses")
 
 
 async def create_campus(form_data, db: Session) -> RedirectResponse:
@@ -662,7 +744,7 @@ def course_values(form: dict[str, Any]) -> dict[str, Any]:
     tags = [item.strip() for item in text(form, "tags").split(",") if item.strip()]
     return {
         "title": text(form, "title"),
-        "category": text(form, "category") or "智习室",
+        "category": text(form, "category") or text(form, "title"),
         "cover_url": text(form, "cover_url") or None,
         "summary": text(form, "summary") or None,
         "suitable_grade": text(form, "suitable_grade") or None,
@@ -671,7 +753,7 @@ def course_values(form: dict[str, Any]) -> dict[str, Any]:
         "tags": tags,
         "content": text(form, "content") or None,
         "sort_order": integer(form, "sort_order", 100),
-        "status": text(form, "status") or "published",
+        "status": text(form, "status") if text(form, "status") in {"published", "hidden"} else "published",
     }
 
 

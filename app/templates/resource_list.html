@@ -120,13 +120,16 @@
                   {% elif resource == 'campuses' %}
                   <strong>{{ item.name }}</strong><br>
                   <small>{{ item.manager_name or '未填写负责人' }} · {{ item.phone or '-' }}</small>
+                  {% elif resource == 'courses' %}
+                  <strong>{{ item.title }}</strong><br>
+                  <small>{{ item.category }} · 排序 {{ item.sort_order }}</small>
                   {% else %}
                   {{ display_name(item) }}
                   {% endif %}
                 </td>
                 <td>
                   <span class="badge {{ 'bg-green-lt text-green' if item.status == 'published' else 'bg-yellow-lt text-yellow' if item.status == 'draft' else 'bg-secondary-lt text-secondary' }}">{{ display_resource_status(resource, item) }}</span>
-                  {% if resource == 'materials' %}
+                  {% if resource in ['materials', 'courses'] %}
                   <br><small>{{ '小程序可见' if item.status == 'published' else '小程序不可见' }}</small>
                   {% endif %}
                 </td>
@@ -134,6 +137,11 @@
                 <td class="actions">
                   <div class="action-group">
                     <a class="action-link action-edit" href="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/edit">编辑</a>
+                    {% if resource == 'courses' %}
+                    <form method="post" action="/admin/courses/{{ item.id }}/visibility" class="inline-form">
+                      <button class="action-link action-edit">{{ '隐藏' if item.status == 'published' else '显示' }}</button>
+                    </form>
+                    {% endif %}
                     <form method="post" action="/admin/{{ resource }}/{{ item.id if resource != 'settings' else item.key }}/delete" class="inline-form">
                       <button class="action-link action-delete">删除</button>
                     </form>

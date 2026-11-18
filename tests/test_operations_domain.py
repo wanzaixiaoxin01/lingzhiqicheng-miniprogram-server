@@ -33,7 +33,7 @@ class OperationsDomainTest(unittest.TestCase):
     def test_roles_have_different_resource_access(self):
         self.assertTrue(can_access_resource(ROLE_ADMIN, "campuses"))
         self.assertTrue(can_access_resource(ROLE_ADMIN, "staff"))
-        self.assertFalse(can_access_resource(ROLE_ADMIN, "courses"))
+        self.assertTrue(can_access_resource(ROLE_ADMIN, "courses"))
         self.assertTrue(can_access_resource(ROLE_MANAGER, "students"))
         self.assertTrue(can_access_resource(ROLE_MANAGER, "staff"))
         self.assertTrue(can_access_resource(ROLE_MANAGER, "visits"))
@@ -46,7 +46,7 @@ class OperationsDomainTest(unittest.TestCase):
         self.assertTrue(can_access_resource(ROLE_ADMIN, "banners"))
         self.assertTrue(can_access_resource(ROLE_ADMIN, "learning_machine_posters"))
         self.assertFalse(can_access_resource(ROLE_MANAGER, "learning_machine_posters"))
-        self.assertNotIn("courses", menu_resources(ROLE_ADMIN))
+        self.assertIn("courses", menu_resources(ROLE_ADMIN))
         self.assertNotIn("banners", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_MANAGER))

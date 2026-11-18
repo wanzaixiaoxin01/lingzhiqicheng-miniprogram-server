@@ -52,8 +52,14 @@
           <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
           {% elif resource == 'courses' %}
           <label>活动名称<input name="title" value="{{ item.title if item else '' }}" required></label>
-          <label>分类<input name="category" value="{{ item.category if item else '智习室' }}"></label>
-          <label>封面 URL<input name="cover_url" value="{{ item.cover_url if item else '' }}"></label>
+          <label>分类<input name="category" value="{{ item.category if item else '' }}" placeholder="如：编程与逻辑"></label>
+          <label>活动封面
+            <input name="cover_file" type="file" accept=".jpg,.jpeg,.png,.webp" {{ '' if item else 'required' }}>
+            <small class="muted">支持 JPG、PNG、WEBP，单张不超过 10 MB；编辑时留空则保留当前封面。</small>
+          </label>
+          {% if item and item.cover_url %}
+          <div class="cover-preview"><img src="{{ item.cover_url }}" alt="当前活动封面"><small class="muted">当前封面</small></div>
+          {% endif %}
           <label>简介<input name="summary" value="{{ item.summary if item else '' }}"></label>
           <label>适合年龄<input name="suitable_grade" value="{{ item.suitable_grade if item else '' }}"></label>
           <label>活动安排<input name="service_period" value="{{ item.service_period if item else '' }}"></label>
@@ -61,7 +67,10 @@
           <label>标签，逗号分隔<input name="tags" value="{{ (item.tags or []) | join(',') if item else '' }}"></label>
           <label>详情<textarea name="content">{{ item.content if item else '' }}</textarea></label>
           <label>排序<input name="sort_order" value="{{ item.sort_order if item else 100 }}"></label>
-          <label>状态<select name="status">{{ status_options(item.status if item else 'published') }}</select></label>
+          <label>小程序展示状态<select name="status">
+            <option value="published" {{ 'selected' if not item or item.status == 'published' else '' }}>显示</option>
+            <option value="hidden" {{ 'selected' if item and item.status != 'published' else '' }}>隐藏</option>
+          </select></label>
           {% elif resource == 'articles' %}
           <label>类型<select name="type">
             {{ article_type_options(item.type if item else 'material') }}

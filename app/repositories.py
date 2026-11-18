@@ -438,6 +438,14 @@ def get_published_course(db: Session, course_id: str) -> models.Course | None:
     return db.scalar(select(models.Course).where(models.Course.id == course_id, models.Course.status == PUBLISHED))
 
 
+def course_has_references(db: Session, course_id: str) -> bool:
+    reference_models = (models.Lead, models.StudentEnrollment, models.AttendanceRecord)
+    return any(
+        db.scalar(select(model.id).where(model.course_id == course_id).limit(1)) is not None
+        for model in reference_models
+    )
+
+
 def list_published_articles(db: Session, article_type: str | None = None) -> Sequence[models.Article]:
     query = select(models.Article).where(models.Article.status == PUBLISHED)
     if article_type:
