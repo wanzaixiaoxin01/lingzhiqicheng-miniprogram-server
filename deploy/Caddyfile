@@ -17,6 +17,10 @@ admin.lingzhiqicheng.com {
     reverse_proxy api:4000
   }
 
+  handle /uploads/courses/* {
+    reverse_proxy api:4000
+  }
+
   handle {
     respond "Not Found" 404
   }
@@ -30,6 +34,14 @@ api.lingzhiqicheng.com, api-test.lingzhiqicheng.com {
   }
 
   handle /uploads/campuses/* {
+    reverse_proxy api:4000
+  }
+
+  handle /uploads/courses/* {
+    reverse_proxy api:4000
+  }
+
+  handle /static/courses/* {
     reverse_proxy api:4000
   }
 

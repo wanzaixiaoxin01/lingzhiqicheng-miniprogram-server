@@ -25,6 +25,7 @@
 2. 同步 API 代码到 `services/api`。
 3. 在 `infra` 目录执行 `docker compose up -d --force-recreate api`。
 4. 检查 `docker compose ps`、API `/health` 和 Caddy 日志。
+5. 执行 `docker compose exec api python -m app.seed`，补齐内置兴趣活动并保留后台已有修改。
 
 ## 微信小程序域名
 
