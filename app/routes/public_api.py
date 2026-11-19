@@ -25,6 +25,7 @@ from app.schemas import (
     MaterialOut,
     ParentBindOut,
     ParentDashboardOut,
+    ParentAppointmentOut,
     ParentPhoneOut,
     ParentSessionOut,
     ParentStudentOut,
@@ -179,12 +180,14 @@ def download_material(material_id: str, db: Session = Depends(get_db)) -> FileRe
 
 
 @router.post("/leads", status_code=201)
-def create_lead(payload: dict, db: Session = Depends(get_db)) -> LeadOut:
+def create_lead(payload: dict, request: Request, db: Session = Depends(get_db)) -> LeadOut:
     result = validate_lead_input(payload)
     if not result.ok:
         raise HTTPException(status_code=400, detail={"error": "VALIDATION_ERROR", "fields": result.errors})
 
-    lead = repositories.create_lead(db, result.value)
+    authorization = request.headers.get("authorization", "")
+    parent = require_parent_user(request, db) if authorization.lower().startswith("bearer ") else None
+    lead = repositories.create_lead(db, result.value, user_id=parent.id if parent else None)
     return LeadOut.model_validate(lead)
 
 
@@ -258,11 +261,44 @@ def authorize_parent_phone(payload: dict, request: Request, db: Session = Depend
     try:
         phone = exchange_phone_code(str(payload.get("code") or ""))
         result = bind_students_by_verified_phone(db, parent.openid, phone)
+        repositories.link_unbound_leads_by_phone(db, result.parent.id, phone)
     except WechatPhoneError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return ParentPhoneOut(phone_masked=mask_phone(result.parent.phone), matched_students=len(result.students))
+
+
+FOLLOW_STATUS_LABELS = {
+    "pending": "待联系",
+    "contacted": "已联系",
+    "visited": "已到店",
+    "converted": "已成交",
+    "invalid": "已关闭",
+}
+
+
+@router.get("/parent/appointments", response_model=list[ParentAppointmentOut])
+def get_parent_appointments(request: Request, db: Session = Depends(get_db)) -> list[ParentAppointmentOut]:
+    parent = require_parent_user(request, db)
+    return [
+        ParentAppointmentOut(
+            id=item.id,
+            name=item.name,
+            phone=item.phone,
+            child_grade=item.child_grade,
+            source=item.source,
+            campus_id=item.campus_id,
+            campus_name=item.campus.name if item.campus else None,
+            course_id=item.course_id,
+            course_title=item.course.title if item.course else None,
+            message=item.message,
+            follow_status=item.follow_status,
+            follow_status_label=FOLLOW_STATUS_LABELS.get(item.follow_status, "处理中"),
+            created_at=item.created_at,
+        )
+        for item in repositories.list_parent_leads(db, parent.id)
+    ]
 
 
 @router.get("/parent/dashboard", response_model=ParentDashboardOut)

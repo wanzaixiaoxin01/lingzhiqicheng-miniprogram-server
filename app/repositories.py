@@ -469,8 +469,9 @@ def get_published_material(db: Session, material_id: str) -> models.Material | N
     return db.scalar(select(models.Material).where(models.Material.id == material_id, models.Material.status == PUBLISHED))
 
 
-def create_lead(db: Session, value: dict[str, str]) -> models.Lead:
+def create_lead(db: Session, value: dict[str, str], user_id: str | None = None) -> models.Lead:
     lead = models.Lead(
+        user_id=user_id,
         name=value["name"],
         phone=value["phone"],
         child_grade=value["child_grade"],
@@ -483,6 +484,31 @@ def create_lead(db: Session, value: dict[str, str]) -> models.Lead:
     db.commit()
     db.refresh(lead)
     return lead
+
+
+def list_parent_leads(db: Session, user_id: str) -> Sequence[models.Lead]:
+    return db.scalars(
+        select(models.Lead)
+        .where(models.Lead.user_id == user_id)
+        .order_by(models.Lead.created_at.desc(), models.Lead.id.desc())
+    ).all()
+
+
+def link_unbound_leads_by_phone(db: Session, user_id: str, phone: str) -> int:
+    normalized = "".join(character for character in phone if character.isdigit())
+    if not user_id or not normalized:
+        return 0
+    candidates = db.scalars(select(models.Lead).where(models.Lead.user_id.is_(None))).all()
+    matched = [
+        item
+        for item in candidates
+        if "".join(character for character in item.phone if character.isdigit()) == normalized
+    ]
+    for item in matched:
+        item.user_id = user_id
+    if matched:
+        db.commit()
+    return len(matched)
 
 
 def dashboard_metrics(db: Session) -> dict[str, int]:

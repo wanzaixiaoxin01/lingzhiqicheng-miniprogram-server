@@ -90,6 +90,22 @@ class LeadOut(OrmModel):
     created_at: datetime
 
 
+class ParentAppointmentOut(BaseModel):
+    id: str
+    name: str
+    phone: str
+    child_grade: str
+    source: str
+    campus_id: str | None = None
+    campus_name: str | None = None
+    course_id: str | None = None
+    course_title: str | None = None
+    message: str | None = None
+    follow_status: str
+    follow_status_label: str
+    created_at: datetime
+
+
 class ParentStudentOut(OrmModel):
     id: str
     name: str
