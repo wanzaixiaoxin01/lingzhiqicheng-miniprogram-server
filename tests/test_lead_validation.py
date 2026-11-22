@@ -8,10 +8,13 @@ class LeadValidationTest(unittest.TestCase):
         result = validate_lead_input(
             {
                 "name": " 王女士 ",
+                "child_name": "小明",
                 "phone": "13800138000",
+                "child_age": 10,
                 "child_grade": "小学四年级",
                 "source": "trial",
                 "campus_id": "campus-001",
+                "appointment_at": "2099-01-01T14:30:00+08:00",
                 "course_id": "course-001",
                 "message": "周末方便到店体验",
             }
@@ -26,9 +29,13 @@ class LeadValidationTest(unittest.TestCase):
         result = validate_lead_input(
             {
                 "name": "王女士",
+                "child_name": "小明",
                 "phone": "12345",
+                "child_age": 10,
                 "child_grade": "小学四年级",
                 "source": "trial",
+                "campus_id": "campus-001",
+                "appointment_at": "2099-01-01T14:30:00+08:00",
             }
         )
 
@@ -38,10 +45,13 @@ class LeadValidationTest(unittest.TestCase):
     def test_rejects_missing_required_fields(self):
         result = validate_lead_input(
             {
+                "child_age": "",
                 "name": " ",
                 "phone": "13800138000",
                 "child_grade": "",
                 "source": " ",
+                "campus_id": "campus-001",
+                "appointment_at": "2099-01-01T14:30:00+08:00",
             }
         )
 
@@ -50,7 +60,6 @@ class LeadValidationTest(unittest.TestCase):
             result.errors,
             {
                 "name": "请输入家长姓名",
-                "child_grade": "请选择孩子年级",
                 "source": "请选择预约来源",
             },
         )

@@ -16,7 +16,9 @@ class AdminStatusDisplayTest(unittest.TestCase):
             "contacted": "已联系",
             "visited": "已到店",
             "converted": "已成交",
+            "not_considering": "暂不考虑",
             "invalid": "无效",
+            "cancelled": "已取消",
         }
         for status, label in labels.items():
             with self.subTest(status=status):

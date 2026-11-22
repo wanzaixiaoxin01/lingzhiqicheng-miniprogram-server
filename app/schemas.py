@@ -77,12 +77,16 @@ class MaterialOut(OrmModel):
 
 
 class LeadOut(OrmModel):
+    child_school: str | None = None
+    child_name: str | None = None
     id: str
     name: str
     phone: str
-    child_grade: str
+    child_grade: str | None = None
+    child_age: int | None = None
+    appointment_at: datetime
     source: str
-    campus_id: str | None = None
+    campus_id: str
     course_id: str | None = None
     message: str | None = None
     follow_status: str
@@ -91,13 +95,18 @@ class LeadOut(OrmModel):
 
 
 class ParentAppointmentOut(BaseModel):
+    child_school: str | None = None
+    child_name: str | None = None
     id: str
     name: str
     phone: str
-    child_grade: str
+    child_grade: str | None = None
+    child_age: int | None = None
+    appointment_at: datetime
     source: str
-    campus_id: str | None = None
-    campus_name: str | None = None
+    campus_id: str
+    campus_name: str
+    campus_phone: str = ""
     course_id: str | None = None
     course_title: str | None = None
     message: str | None = None

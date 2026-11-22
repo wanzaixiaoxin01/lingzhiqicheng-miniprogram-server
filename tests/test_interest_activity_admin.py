@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy import create_engine
@@ -6,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import Base
 from app.domain.staff_access import ROLE_ADMIN, ROLE_MANAGER, ROLE_TEACHER, can_access_resource
-from app.models import Course, Lead
+from app.models import Campus, Course, Lead
 from app.repositories import course_has_references
 
 
@@ -28,9 +29,20 @@ class InterestActivityAdminTest(unittest.TestCase):
         Base.metadata.create_all(engine)
         with Session(engine) as db:
             course = Course(id="activity", title="绘画", category="绘画")
-            db.add(course)
+            campus = Campus(id="campus", name="网点", address="地址", phone="13800138000")
+            db.add_all([course, campus])
             db.flush()
-            db.add(Lead(name="家长", phone="13800138000", child_grade="小学", source="course", course_id=course.id))
+            db.add(Lead(
+                name="家长",
+                phone="13800138000",
+                child_age=10,
+                child_name="小明",
+                child_grade="四年级",
+                source="course",
+                course_id=course.id,
+                campus_id=campus.id,
+                appointment_at=datetime(2099, 1, 1, tzinfo=timezone.utc),
+            ))
             db.commit()
 
             self.assertTrue(course_has_references(db, course.id))

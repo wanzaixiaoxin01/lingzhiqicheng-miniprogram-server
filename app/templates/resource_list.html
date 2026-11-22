@@ -28,21 +28,22 @@
         </header>
 
         {% if resource == 'leads' %}
+        <nav class="lead-status-tabs" aria-label="预约跟进状态">
+          {% for value, label in lead_statuses %}
+          <a class="lead-status-tab {{ 'is-active' if filters.follow_status == value else '' }}" href="/admin/leads?follow_status={{ value }}" {% if filters.follow_status == value %}aria-current="page"{% endif %}>
+            <span>{{ label }}</span><span class="lead-status-count {{ ('is-pending' if lead_status_counts.get(value, 0) else 'is-empty') if value == 'pending' else '' }}">{{ lead_status_counts.get(value, 0) }}</span>
+          </a>
+          {% endfor %}
+        </nav>
         <form class="card mb-3" method="get" action="/admin/leads">
+          <input type="hidden" name="follow_status" value="{{ filters.follow_status }}">
           <div class="card-body">
             <div class="row g-3 align-items-end">
-              <div class="col-md-2"><label class="form-label">跟进状态</label><select class="form-select" name="follow_status">
-                <option value="">全部状态</option>
-                <option value="pending" {{ 'selected' if filters.follow_status == 'pending' else '' }}>待跟进</option>
-                <option value="contacted" {{ 'selected' if filters.follow_status == 'contacted' else '' }}>已联系</option>
-                <option value="visited" {{ 'selected' if filters.follow_status == 'visited' else '' }}>已到店</option>
-                <option value="converted" {{ 'selected' if filters.follow_status == 'converted' else '' }}>已成交</option>
-                <option value="invalid" {{ 'selected' if filters.follow_status == 'invalid' else '' }}>无效</option>
-              </select></div>
-              <div class="col-md-3"><label class="form-label">家长姓名</label><input class="form-control" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></div>
-              <div class="col-md-3"><label class="form-label">家长手机号</label><input class="form-control" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></div>
+              <div class="col-md-2"><label class="form-label">预约网点</label><select class="form-select" name="campus_id"><option value="">全部网点</option>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if filters.campus_id == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></div>
+              <div class="col-md-2"><label class="form-label">家长姓名</label><input class="form-control" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></div>
+              <div class="col-md-2"><label class="form-label">家长手机号</label><input class="form-control" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></div>
               <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
-              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/leads">重置</a></div>
+              <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/leads?follow_status={{ filters.follow_status }}">重置</a></div>
               <div class="col-auto ms-auto text-secondary list-total">共 <strong>{{ pagination.total }}</strong> 条</div>
             </div>
           </div>
@@ -51,7 +52,7 @@
         <section class="card">
           <div class="table-responsive">
             <table class="table table-vcenter card-table lead-table">
-              <thead><tr><th>家长信息</th><th>孩子与意向</th><th>当前状态</th><th>更新时间</th><th>跟进操作</th></tr></thead>
+              <thead><tr><th>家长信息</th><th>孩子与意向</th><th>网点与预约时间</th><th>当前状态</th><th>更新时间</th><th>跟进操作</th></tr></thead>
               <tbody>
                 {% for item in items %}
                 <tr>
@@ -61,7 +62,8 @@
                       <button class="action-link action-edit lead-copy" type="button" data-name="{{ item.name }}" data-phone="{{ item.phone }}" aria-label="复制{{ item.name }}的姓名和手机号">复制</button>
                     </div>
                   </td>
-                  <td><strong>{{ item.child_grade }}</strong><small>{{ lead_source_label(item.source) }}</small></td>
+                  <td><strong>{{ item.child_name or '姓名未填写' }} · {{ (item.child_age|string ~ '岁') if item.child_age else '年龄未填写' }} · {{ item.child_grade or '年级未填写' }}</strong><small>当前就读学校：{{ item.child_school or '未填写' }}</small><small>{{ lead_source_label(item.source) }}</small></td>
+                  <td><strong>{{ item.campus.name }}</strong><small>{{ format_beijing_datetime(item.appointment_at)[:10] }}</small></td>
                   <td><span class="status-badge status-{{ item.follow_status }}">{{ display_resource_status(resource, item) }}</span></td>
                   <td><span class="date-text">{{ item.updated_at.strftime('%Y-%m-%d') if item.updated_at else '-' }}</span><small>{{ item.updated_at.strftime('%H:%M') if item.updated_at else '' }}</small></td>
                   <td>
@@ -72,7 +74,9 @@
                         <option value="contacted" {{ 'selected' if item.follow_status == 'contacted' else '' }}>已联系</option>
                         <option value="visited" {{ 'selected' if item.follow_status == 'visited' else '' }}>已到店</option>
                         <option value="converted" {{ 'selected' if item.follow_status == 'converted' else '' }}>已成交</option>
+                        <option value="not_considering" {{ 'selected' if item.follow_status == 'not_considering' else '' }}>暂不考虑</option>
                         <option value="invalid" {{ 'selected' if item.follow_status == 'invalid' else '' }}>无效</option>
+                        <option value="cancelled" {{ 'selected' if item.follow_status == 'cancelled' else '' }}>已取消</option>
                       </select>
                       <input class="form-control form-control-sm" name="follow_note" placeholder="填写跟进备注" value="{{ item.follow_note or '' }}">
                       <button class="btn btn-primary btn-sm">保存</button>
@@ -80,7 +84,7 @@
                   </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="empty-state">没有找到符合条件的线索</td></tr>
+                <tr><td colspan="6" class="empty-state">没有找到符合条件的线索</td></tr>
                 {% endfor %}
               </tbody>
             </table>

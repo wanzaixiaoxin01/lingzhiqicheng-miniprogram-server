@@ -1,5 +1,7 @@
+from datetime import timezone
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -50,7 +52,9 @@ def display_resource_status(resource: str, item: Any) -> str:
             "contacted": "已联系",
             "visited": "已到店",
             "converted": "已成交",
+            "not_considering": "暂不考虑",
             "invalid": "无效",
+            "cancelled": "已取消",
         },
     }
     common_labels = {
@@ -101,6 +105,17 @@ templates.env.globals["lead_source_label"] = lambda source: {
     "course": "活动咨询",
     "campus": "网点咨询",
 }.get(source, source or "-")
+
+
+def format_beijing_datetime(value) -> str:
+    if not value:
+        return "-"
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d %H:%M")
+
+
+templates.env.globals["format_beijing_datetime"] = format_beijing_datetime
 templates.env.globals["material_file_size"] = lambda size: (
     f"{size} B"
     if size < 1024
@@ -318,6 +333,7 @@ def list_resource(
     follow_status: str = "",
     parent_name: str = "",
     phone: str = "",
+    campus_id: str = "",
     search: str = "",
     status: str = "",
     page: int = 1,
@@ -329,17 +345,30 @@ def list_resource(
         raise HTTPException(status_code=404, detail="管理资源不存在")
     context = {"resource": resource, "section": resource, "admin_role": admin_role(request)}
     if resource == "leads":
+        lead_statuses = [
+            ("pending", "待跟进"), ("contacted", "已联系"),
+            ("visited", "已到店"), ("converted", "已成交"),
+            ("not_considering", "暂不考虑"),
+            ("invalid", "无效"), ("cancelled", "已取消"),
+        ]
+        active_status = follow_status.strip()
+        if active_status not in dict(lead_statuses):
+            active_status = "pending"
         filters = {
-            "follow_status": follow_status.strip(),
+            "follow_status": active_status,
             "parent_name": parent_name.strip(),
             "phone": phone.strip(),
+            "campus_id": campus_id.strip(),
         }
         result = repositories.list_admin_leads(db, page=page, page_size=10, **filters)
 
         context.update(
             {
                 "items": result.items,
+                "lead_statuses": lead_statuses,
+                "lead_status_counts": repositories.count_leads_by_status(db),
                 "filters": filters,
+                "campuses": db.scalars(select(models.Campus).order_by(models.Campus.name)).all(),
                 **pagination_context(result, "/admin/leads", filters),
             }
         )

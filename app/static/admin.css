@@ -549,6 +549,8 @@ th {
 .status-visited { background: #e8f7f7; color: #14757c; }
 .status-converted { background: #e7f7ee; color: #17834c; }
 .status-invalid { background: #eef1f5; color: #69788a; }
+.status-not_considering { background: #eef1f5; color: #69788a; }
+.status-cancelled { background: #f3f4f6; color: #7a879a; }
 
 .date-text {
   color: #334963;
@@ -867,3 +869,13 @@ th {
 .learning-poster-actions { display: flex; gap: 16px; padding: 8px 16px 16px; }
 .learning-poster-actions form { margin: 0; }
 .learning-poster-actions button:disabled { color: #b3bdc9; cursor: default; }
+
+.lead-status-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; padding: 4px 0 0; border-bottom: 1px solid #dce5f0; }
+.lead-status-tab { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 12px 18px; border-bottom: 3px solid transparent; color: #66758b; font-weight: 600; text-decoration: none; }
+.lead-status-tab:hover { color: #326fce; background: #f0f5fc; text-decoration: none; }
+.lead-status-tab.is-active { color: #326fce; border-bottom-color: #326fce; }
+.lead-status-tab:focus-visible { outline: 2px solid #326fce; outline-offset: -2px; }
+.lead-status-count { min-width: 24px; padding: 2px 7px; border-radius: 12px; background: #e9eef5; color: #66758b; font-size: 12px; text-align: center; }
+.lead-status-tab.is-active .lead-status-count { background: #326fce; color: #fff; }
+.lead-status-tab .lead-status-count.is-pending { background: #d63939; color: #fff; }
+.lead-status-tab .lead-status-count.is-empty { background: #e9eef5; color: #66758b; }

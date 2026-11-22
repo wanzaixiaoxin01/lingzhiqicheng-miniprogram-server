@@ -2,6 +2,31 @@ from app import models
 from app.db import SessionLocal, init_db
 
 
+CAMPUS_SEED = [
+    {
+        "id": "dancheng",
+        "name": "郾城服务点",
+        "address": "郾城区海河路沙滩文景苑南门口东路北",
+        "phone": "4009006368",
+        "status": "published",
+    },
+    {
+        "id": "lianhua",
+        "name": "莲花服务点",
+        "address": "舞阳县莲花镇卫生院门口灵智启程智慧学习中心",
+        "phone": "4009006368",
+        "status": "published",
+    },
+    {
+        "id": "beiwudu",
+        "name": "北舞渡服务点",
+        "address": "舞阳县北舞渡镇丁家胡辣汤西100米路北",
+        "phone": "4009006368",
+        "status": "published",
+    },
+]
+
+
 INTEREST_ACTIVITY_SEED = [
     {
         "id": "interest-programming",
@@ -92,6 +117,16 @@ INTEREST_ACTIVITY_SEED = [
 LEGACY_COURSE_CATEGORIES = {"智习室", "晚托"}
 
 
+def seed_campuses(db) -> None:
+    for values in CAMPUS_SEED:
+        campus = db.get(models.Campus, values["id"])
+        if campus is None:
+            db.add(models.Campus(**values))
+            continue
+        for field, value in values.items():
+            setattr(campus, field, value)
+
+
 def seed_courses(db) -> None:
     for values in INTEREST_ACTIVITY_SEED:
         if db.get(models.Course, values["id"]) is None:
@@ -118,18 +153,7 @@ def seed() -> None:
                 )
             )
 
-        if db.query(models.Campus).count() == 0:
-            db.add(
-                models.Campus(
-                    name="灵智启程智习室",
-                    cover_url="/static/logo.png",
-                    address="请在后台填写校区详细地址",
-                    phone="请在后台填写联系电话",
-                    business_hours="周一至周日 09:00-21:00",
-                    intro="提供安静自习场地、智能设备展示和预约到店体验服务。",
-                    status="published",
-                )
-            )
+        seed_campuses(db)
 
         seed_courses(db)
 

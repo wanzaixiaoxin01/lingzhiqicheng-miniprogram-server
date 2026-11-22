@@ -1,8 +1,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, time, timedelta, timezone
 from math import ceil
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
@@ -11,6 +12,8 @@ from app import models
 
 
 PUBLISHED = "published"
+BEIJING = ZoneInfo("Asia/Shanghai")
+PARENT_DAILY_LEAD_LIMIT = 10
 
 
 @dataclass(frozen=True)
@@ -469,12 +472,16 @@ def get_published_material(db: Session, material_id: str) -> models.Material | N
     return db.scalar(select(models.Material).where(models.Material.id == material_id, models.Material.status == PUBLISHED))
 
 
-def create_lead(db: Session, value: dict[str, str], user_id: str | None = None) -> models.Lead:
+def create_lead(db: Session, value: dict[str, Any], user_id: str | None = None) -> models.Lead:
     lead = models.Lead(
         user_id=user_id,
         name=value["name"],
         phone=value["phone"],
         child_grade=value["child_grade"],
+        child_age=value["child_age"],
+        child_name=value.get("child_name"),
+        child_school=value.get("child_school"),
+        appointment_at=value["appointment_at"],
         source=value["source"],
         campus_id=value.get("campus_id") or None,
         course_id=value.get("course_id") or None,
@@ -486,12 +493,52 @@ def create_lead(db: Session, value: dict[str, str], user_id: str | None = None) 
     return lead
 
 
+def parent_daily_lead_limit_reached(
+    db: Session,
+    user_id: str,
+    *,
+    now: datetime | None = None,
+) -> bool:
+    db.execute(
+        select(models.User.id)
+        .where(models.User.id == user_id)
+        .with_for_update()
+    ).scalar_one()
+    current = (now or datetime.now(BEIJING)).astimezone(BEIJING)
+    day_start = datetime.combine(current.date(), time.min, tzinfo=BEIJING).astimezone(timezone.utc)
+    day_end = day_start + timedelta(days=1)
+    count = db.scalar(
+        select(func.count(models.Lead.id)).where(
+            models.Lead.user_id == user_id,
+            models.Lead.created_at >= day_start,
+            models.Lead.created_at < day_end,
+        )
+    ) or 0
+    return count >= PARENT_DAILY_LEAD_LIMIT
+
+
 def list_parent_leads(db: Session, user_id: str) -> Sequence[models.Lead]:
     return db.scalars(
         select(models.Lead)
         .where(models.Lead.user_id == user_id)
         .order_by(models.Lead.created_at.desc(), models.Lead.id.desc())
     ).all()
+
+
+def cancel_parent_lead(db: Session, lead_id: str, user_id: str) -> models.Lead | None:
+    lead = db.scalar(
+        select(models.Lead)
+        .where(models.Lead.id == lead_id, models.Lead.user_id == user_id)
+        .with_for_update()
+    )
+    if lead is None:
+        return None
+    if lead.follow_status != "pending":
+        raise ValueError("当前预约无法取消")
+    lead.follow_status = "cancelled"
+    db.commit()
+    db.refresh(lead)
+    return lead
 
 
 def link_unbound_leads_by_phone(db: Session, user_id: str, phone: str) -> int:
@@ -522,12 +569,20 @@ def dashboard_metrics(db: Session) -> dict[str, int]:
     }
 
 
+def count_leads_by_status(db: Session) -> dict[str, int]:
+    return dict(db.execute(
+        select(models.Lead.follow_status, func.count(models.Lead.id))
+        .group_by(models.Lead.follow_status)
+    ).all())
+
+
 def list_admin_leads(
     db: Session,
     *,
     follow_status: str = "",
     parent_name: str = "",
     phone: str = "",
+    campus_id: str = "",
     page: int = 1,
     page_size: int = 10,
 ) -> PaginatedItems:
@@ -536,6 +591,8 @@ def list_admin_leads(
         filters.append(models.Lead.follow_status == follow_status.strip())
     if parent_name.strip():
         filters.append(models.Lead.name.ilike(f"%{parent_name.strip()}%"))
+    if campus_id.strip():
+        filters.append(models.Lead.campus_id == campus_id.strip())
     phone_digits = "".join(character for character in phone if character.isdigit())
     if phone_digits:
         normalized_phone = func.replace(func.replace(models.Lead.phone, "-", ""), " ", "")
@@ -543,6 +600,7 @@ def list_admin_leads(
 
     query = (
         select(models.Lead)
+        .options(selectinload(models.Lead.campus))
         .where(*filters)
         .order_by(models.Lead.created_at.desc())
     )

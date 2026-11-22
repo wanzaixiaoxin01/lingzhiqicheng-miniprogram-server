@@ -53,8 +53,10 @@
               <tr>
                 <th>家长</th>
                 <th>手机号</th>
-                <th>孩子年级</th>
+                <th>孩子情况</th>
                 <th>意向</th>
+                <th>网点</th>
+                <th>预约时间</th>
                 <th>状态</th>
               </tr>
             </thead>
@@ -63,12 +65,14 @@
               <tr>
                 <td>{{ lead.name }}</td>
                 <td>{{ lead.phone }}</td>
-                <td>{{ lead.child_grade }}</td>
+                <td>{{ lead.child_age }}岁 · {{ lead.child_grade }}</td>
                 <td>{{ lead_source_label(lead.source) }}</td>
+                <td>{{ lead.campus.name }}</td>
+                <td>{{ format_beijing_datetime(lead.appointment_at) }}</td>
                 <td><span class="status-badge status-{{ lead.follow_status }}">{{ display_resource_status('leads', lead) }}</span></td>
               </tr>
               {% else %}
-              <tr><td colspan="5" class="empty-state">暂无待跟进预约</td></tr>
+              <tr><td colspan="7" class="empty-state">暂无待跟进预约</td></tr>
               {% endfor %}
             </tbody>
           </table>

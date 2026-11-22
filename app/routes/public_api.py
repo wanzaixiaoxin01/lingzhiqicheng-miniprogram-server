@@ -185,9 +185,15 @@ def create_lead(payload: dict, request: Request, db: Session = Depends(get_db)) 
     if not result.ok:
         raise HTTPException(status_code=400, detail={"error": "VALIDATION_ERROR", "fields": result.errors})
 
-    authorization = request.headers.get("authorization", "")
-    parent = require_parent_user(request, db) if authorization.lower().startswith("bearer ") else None
-    lead = repositories.create_lead(db, result.value, user_id=parent.id if parent else None)
+    parent = require_parent_user(request, db)
+    if repositories.get_published_campus(db, result.value["campus_id"]) is None:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "VALIDATION_ERROR", "fields": {"campus_id": "预约网点不存在或不可预约"}},
+        )
+    if repositories.parent_daily_lead_limit_reached(db, parent.id):
+        raise HTTPException(status_code=429, detail="每天最多提交10条预约，请明天再试")
+    lead = repositories.create_lead(db, result.value, user_id=parent.id)
     return LeadOut.model_validate(lead)
 
 
@@ -274,7 +280,9 @@ FOLLOW_STATUS_LABELS = {
     "contacted": "已联系",
     "visited": "已到店",
     "converted": "已成交",
+    "not_considering": "暂不考虑",
     "invalid": "已关闭",
+    "cancelled": "已取消",
 }
 
 
@@ -287,9 +295,14 @@ def get_parent_appointments(request: Request, db: Session = Depends(get_db)) -> 
             name=item.name,
             phone=item.phone,
             child_grade=item.child_grade,
+            child_age=item.child_age,
+            child_name=item.child_name,
+            child_school=item.child_school,
+            appointment_at=item.appointment_at,
             source=item.source,
             campus_id=item.campus_id,
             campus_name=item.campus.name if item.campus else None,
+            campus_phone=(item.campus.phone or "").strip() if item.campus else "",
             course_id=item.course_id,
             course_title=item.course.title if item.course else None,
             message=item.message,
@@ -299,6 +312,22 @@ def get_parent_appointments(request: Request, db: Session = Depends(get_db)) -> 
         )
         for item in repositories.list_parent_leads(db, parent.id)
     ]
+
+
+@router.post("/parent/appointments/{appointment_id}/cancel")
+def cancel_parent_appointment(
+    appointment_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> dict[str, str]:
+    parent = require_parent_user(request, db)
+    try:
+        appointment = repositories.cancel_parent_lead(db, appointment_id, parent.id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    if appointment is None:
+        raise HTTPException(status_code=404, detail="预约记录不存在")
+    return {"message": "预约已取消"}
 
 
 @router.get("/parent/dashboard", response_model=ParentDashboardOut)

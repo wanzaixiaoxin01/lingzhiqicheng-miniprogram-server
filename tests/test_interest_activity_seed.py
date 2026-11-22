@@ -4,11 +4,29 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app.db import Base
-from app.models import Course
-from app.seed import INTEREST_ACTIVITY_SEED, seed_courses
+from app.models import Campus, Course
+from app.seed import CAMPUS_SEED, INTEREST_ACTIVITY_SEED, seed_campuses, seed_courses
 
 
 class InterestActivitySeedTest(unittest.TestCase):
+    def test_seed_upserts_three_historical_self_study_locations(self):
+        with Session(self.engine) as db:
+            seed_campuses(db)
+            seed_campuses(db)
+            db.commit()
+
+            campuses = db.query(Campus).order_by(Campus.id).all()
+            self.assertEqual(len(campuses), 3)
+            self.assertEqual(
+                {campus.name for campus in campuses},
+                {"郾城服务点", "莲花服务点", "北舞渡服务点"},
+            )
+            self.assertTrue(all(campus.address for campus in campuses))
+            self.assertTrue(all(campus.phone == "4009006368" for campus in campuses))
+            self.assertTrue(all(campus.status == "published" for campus in campuses))
+
+        self.assertEqual(len(CAMPUS_SEED), 3)
+
     def setUp(self):
         self.engine = create_engine("sqlite+pysqlite:///:memory:")
         Base.metadata.create_all(self.engine)

@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 import uuid
 
-from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, Text, UniqueConstraint, func
+from sqlalchemy import Date, DateTime, ForeignKey, Index, Numeric, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON
 
@@ -233,21 +233,29 @@ class AttendanceRecord(Base, TimestampMixin):
 
 class Lead(Base, TimestampMixin):
     __tablename__ = "leads"
+    __table_args__ = (
+        Index("ix_leads_user_created_at", "user_id", "created_at"),
+        Index("ix_leads_campus_appointment_at", "campus_id", "appointment_at"),
+    )
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
     user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    campus_id: Mapped[str | None] = mapped_column(ForeignKey("campuses.id"), nullable=True)
+    campus_id: Mapped[str] = mapped_column(ForeignKey("campuses.id"), nullable=False)
     course_id: Mapped[str | None] = mapped_column(ForeignKey("courses.id"), nullable=True)
     name: Mapped[str] = mapped_column(String(80))
     phone: Mapped[str] = mapped_column(String(40))
-    child_grade: Mapped[str] = mapped_column(String(80))
+    child_grade: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    child_age: Mapped[int | None] = mapped_column(nullable=True)
+    child_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    child_school: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    appointment_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str] = mapped_column(String(40))
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
     follow_status: Mapped[str] = mapped_column(String(30), default="pending")
     follow_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user: Mapped[User | None] = relationship(back_populates="leads")
-    campus: Mapped[Campus | None] = relationship(back_populates="leads")
+    campus: Mapped[Campus] = relationship(back_populates="leads")
     course: Mapped[Course | None] = relationship(back_populates="leads")
 
 
