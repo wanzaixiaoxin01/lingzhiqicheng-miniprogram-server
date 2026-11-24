@@ -101,6 +101,13 @@ class StudentValidityTest(unittest.TestCase):
         self.assertNotIn('class="validity-presets"', template)
         self.assertIn('<textarea name="note"', template)
 
+    def test_student_detail_contains_inline_enrollment_form(self):
+        template = (Path(__file__).parents[1] / "app/templates/student_detail.html").read_text(encoding="utf-8")
+        self.assertIn('action="/admin/students/{{ item.id }}/enrollments"', template)
+        self.assertIn("新增报名记录", template)
+        self.assertIn('data-validity-range', template)
+        self.assertNotIn('enrollments/new', template)
+
     def test_create_student_saves_note_service_and_dates(self):
         engine = create_engine("sqlite+pysqlite:///:memory:")
         Base.metadata.create_all(engine)

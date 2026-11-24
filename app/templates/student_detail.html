@@ -6,6 +6,9 @@
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
     <link rel="stylesheet" href="/static/admin.css?v=20261116-7">
+    <link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">
+    <link rel="stylesheet" href="/static/student-validity-range.css?v=20261124-2">
+    <script defer src="/static/admin-form.js?v=20261125-1"></script>
   </head>
   <body>
     <main class="shell">
@@ -13,8 +16,21 @@
       <section class="workspace">
         <header>
           <div><h1>{{ title }}</h1><p>{{ item.grade }} · {{ item.school or '未填写学校' }} · {{ item.guardian_phone or '未绑定手机号' }}</p></div>
-          <div class="action-group"><a class="btn btn-primary" href="/admin/students/{{ item.id }}/enrollments/new">新增报名记录</a><a class="btn btn-ghost-secondary" href="/admin/students">返回列表</a></div>
+          <a class="btn btn-ghost-secondary" href="/admin/students">返回列表</a>
         </header>
+        <section class="card mb-3">
+          <div class="card-header"><h2 class="card-title">新增报名记录</h2><span class="text-secondary">续费日期不能与已有记录重叠</span></div>
+          <form class="edit-form panel" method="post" action="/admin/students/{{ item.id }}/enrollments">
+            <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}">{{ campus.name }}</option>{% endfor %}</select></label>
+            <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+            <label class="validity-range-field" data-validity-range>有效期
+              <span class="validity-range-control"><input name="started_on" type="text" inputmode="none" autocomplete="off" placeholder="开始日期" readonly required><span class="validity-range-arrow" aria-hidden="true">至</span><input name="ended_on" type="text" inputmode="none" autocomplete="off" placeholder="结束日期" readonly required></span>
+              <small class="muted">有效期包含开始和结束当天</small>
+            </label>
+            <label>状态<select name="status"><option value="active">有效</option><option value="completed">已结束</option></select></label>
+            <div class="form-actions"><button>保存报名记录</button></div>
+          </form>
+        </section>
         <section class="card">
           <div class="card-header"><h2 class="card-title">报名记录</h2><span class="text-secondary">共 {{ enrollments|length }} 条</span></div>
           <div class="table-responsive"><table class="table table-vcenter card-table">
@@ -34,5 +50,7 @@
         </section>
       </section>
     </main>
+    <script src="/static/vendor/litepicker/litepicker.umd.js?v=2.0.12"></script>
+    <script type="module" src="/static/student-validity-range.js?v=20261124-3"></script>
   </body>
 </html>

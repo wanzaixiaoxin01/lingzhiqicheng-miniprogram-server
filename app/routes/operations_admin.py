@@ -352,6 +352,8 @@ def student_detail(item_id: str, request: Request, db: Session = Depends(get_db)
             "title": f"{item.name} · 报名记录",
             "item": item,
             "enrollments": enrollments,
+            "campuses": student_campuses(db, current),
+            "service_options": STUDENT_SERVICE_OPTIONS,
         },
     )
 
@@ -359,21 +361,8 @@ def student_detail(item_id: str, request: Request, db: Session = Depends(get_db)
 @router.get("/students/{item_id}/enrollments/new")
 def new_student_enrollment(item_id: str, request: Request, db: Session = Depends(get_db)):
     current = ensure_access(request, "students")
-    student = get_allowed_student(db, current, item_id)
-    return render(
-        request,
-        "operations_form.html",
-        {
-            "resource": "student_enrollment",
-            "title": f"为 {student.name} 新增报名记录",
-            "item": None,
-            "student": student,
-            "campuses": student_campuses(db, current),
-            "selected_campus": "",
-            "service_options": STUDENT_SERVICE_OPTIONS,
-            "selected_service_type": STUDENT_SERVICE_OPTIONS[0][0],
-        },
-    )
+    get_allowed_student(db, current, item_id)
+    return redirect(f"/admin/students/{item_id}/detail")
 
 
 @router.post("/students/{item_id}/enrollments")
