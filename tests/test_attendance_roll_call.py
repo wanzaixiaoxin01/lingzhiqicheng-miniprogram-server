@@ -46,6 +46,8 @@ class AttendanceRollCallTest(unittest.TestCase):
                     campus_id=self.campus.id,
                     service_type="智习室学习",
                     status="active",
+                    started_on=date(2026, 1, 1),
+                    ended_on=date(2026, 12, 31),
                 )
             )
         self.db.commit()
@@ -103,6 +105,23 @@ class AttendanceRollCallTest(unittest.TestCase):
         self.assertEqual(filtered.items[0].student.id, "student-11")
         self.assertTrue(filtered.items[0].morning_present)
         self.assertFalse(filtered.items[0].afternoon_present)
+
+    def test_roster_only_includes_enrollment_valid_on_selected_date(self):
+        self.db.add_all([
+            models.StudentEnrollment(
+                id="future-enrollment",
+                student_id="student-00",
+                campus_id=self.campus.id,
+                service_type="未来报名",
+                status="active",
+                started_on=date(2027, 1, 1),
+                ended_on=date(2027, 12, 31),
+            ),
+        ])
+        self.db.commit()
+        roster = repositories.list_roll_call_roster(self.db, self.campus.id, date(2026, 11, 16))
+        self.assertEqual(roster.total, 12)
+        self.assertEqual({item.enrollment.service_type for item in roster.items}, {"智习室学习"})
 
     def test_check_in_is_idempotent_and_removes_empty_record(self):
         first = repositories.set_roll_call_attendance(

@@ -308,13 +308,136 @@ def list_students(
         "operations_list.html",
         {
             "resource": "students",
-            "title": "学生管理",
+            "title": "学生报名管理",
             "items": result.items,
             "filters": filters,
             "status_options": [("active", "在读"), ("inactive", "停读")],
             **pagination_context(result, "/admin/students", filters),
         },
     )
+
+
+def student_campuses(db: Session, current: AdminIdentity) -> list[models.Campus]:
+    campus_ids = scoped_campus_ids(db, current)
+    campuses = list(db.scalars(select(models.Campus).order_by(models.Campus.name)).all())
+    if campus_ids is not None:
+        campuses = [campus for campus in campuses if campus.id in campus_ids]
+    return campuses
+
+
+def get_allowed_student(db: Session, current: AdminIdentity, item_id: str) -> models.Student:
+    item = db.get(models.Student, item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="学生不存在")
+    allowed = scoped_campus_ids(db, current)
+    if allowed is not None and not any(enrollment.campus_id in allowed for enrollment in item.enrollments):
+        raise HTTPException(status_code=403, detail="没有权限管理该学生")
+    return item
+
+
+@router.get("/students/{item_id}/detail")
+def student_detail(item_id: str, request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "students")
+    item = get_allowed_student(db, current, item_id)
+    enrollments = sorted(
+        item.enrollments,
+        key=lambda enrollment: (enrollment.started_on or date.min, enrollment.created_at),
+        reverse=True,
+    )
+    return render(
+        request,
+        "student_detail.html",
+        {
+            "resource": "students",
+            "title": f"{item.name} · 报名记录",
+            "item": item,
+            "enrollments": enrollments,
+        },
+    )
+
+
+@router.get("/students/{item_id}/enrollments/new")
+def new_student_enrollment(item_id: str, request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "students")
+    student = get_allowed_student(db, current, item_id)
+    return render(
+        request,
+        "operations_form.html",
+        {
+            "resource": "student_enrollment",
+            "title": f"为 {student.name} 新增报名记录",
+            "item": None,
+            "student": student,
+            "campuses": student_campuses(db, current),
+            "selected_campus": "",
+            "service_options": STUDENT_SERVICE_OPTIONS,
+            "selected_service_type": STUDENT_SERVICE_OPTIONS[0][0],
+        },
+    )
+
+
+@router.post("/students/{item_id}/enrollments")
+async def create_student_enrollment(item_id: str, request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "students")
+    student = get_allowed_student(db, current, item_id)
+    form = await request.form()
+    started_on, ended_on = student_validity_dates(form)
+    campus_id = text(form, "campus_id")
+    if not campus_id or not campus_allowed(db, current, campus_id):
+        raise HTTPException(status_code=400, detail="请选择有权限管理的智习室网点")
+    validate_enrollment_date_overlap(db, student.id, started_on, ended_on)
+    db.add(models.StudentEnrollment(
+        student_id=student.id,
+        campus_id=campus_id,
+        service_type=student_service_type(form),
+        started_on=started_on,
+        ended_on=ended_on,
+        status=text(form, "status", "active"),
+    ))
+    db.commit()
+    return redirect(f"/admin/students/{student.id}/detail")
+
+
+@router.get("/students/{item_id}/enrollments/{enrollment_id}/edit")
+def edit_student_enrollment(item_id: str, enrollment_id: str, request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "students")
+    student = get_allowed_student(db, current, item_id)
+    enrollment = db.get(models.StudentEnrollment, enrollment_id)
+    if enrollment is None or enrollment.student_id != student.id or not campus_allowed(db, current, enrollment.campus_id):
+        raise HTTPException(status_code=404, detail="报名记录不存在")
+    service_type = enrollment.service_type if enrollment.service_type in STUDENT_SERVICE_VALUES else STUDENT_SERVICE_OPTIONS[0][0]
+    return render(request, "operations_form.html", {
+        "resource": "student_enrollment",
+        "title": f"编辑 {student.name} 的报名记录",
+        "item": enrollment,
+        "student": student,
+        "campuses": student_campuses(db, current),
+        "selected_campus": enrollment.campus_id,
+        "service_options": STUDENT_SERVICE_OPTIONS,
+        "selected_service_type": service_type,
+    })
+
+
+@router.post("/students/{item_id}/enrollments/{enrollment_id}")
+async def update_student_enrollment(item_id: str, enrollment_id: str, request: Request, db: Session = Depends(get_db)):
+    current = ensure_access(request, "students")
+    student = get_allowed_student(db, current, item_id)
+    enrollment = db.get(models.StudentEnrollment, enrollment_id)
+    if enrollment is None or enrollment.student_id != student.id or not campus_allowed(db, current, enrollment.campus_id):
+        raise HTTPException(status_code=404, detail="报名记录不存在")
+    form = await request.form()
+    started_on, ended_on = student_validity_dates(form)
+    campus_id = text(form, "campus_id")
+    if not campus_id or not campus_allowed(db, current, campus_id):
+        raise HTTPException(status_code=400, detail="请选择有权限管理的智习室网点")
+    validate_enrollment_date_overlap(db, student.id, started_on, ended_on, exclude_id=enrollment.id)
+    enrollment.campus_id = campus_id
+    enrollment.service_type = student_service_type(form)
+    enrollment.started_on = started_on
+    enrollment.ended_on = ended_on
+    enrollment.status = text(form, "status", enrollment.status)
+    db.commit()
+    return redirect(f"/admin/students/{student.id}/detail")
 
 
 @router.get("/students/new")
@@ -357,6 +480,28 @@ def student_service_type(form) -> str:
     return value
 
 
+def validate_enrollment_date_overlap(
+    db: Session,
+    student_id: str,
+    started_on: date,
+    ended_on: date,
+    exclude_id: str | None = None,
+) -> None:
+    if ended_on < started_on:
+        raise HTTPException(status_code=400, detail="结束日期不能早于开始日期")
+    query = select(models.StudentEnrollment).where(
+        models.StudentEnrollment.student_id == student_id,
+        models.StudentEnrollment.started_on.is_not(None),
+        models.StudentEnrollment.ended_on.is_not(None),
+        models.StudentEnrollment.started_on <= ended_on,
+        models.StudentEnrollment.ended_on >= started_on,
+    )
+    if exclude_id:
+        query = query.where(models.StudentEnrollment.id != exclude_id)
+    if db.scalar(query.limit(1)) is not None:
+        raise HTTPException(status_code=400, detail="报名日期不能与已有记录重叠")
+
+
 @router.post("/students")
 async def create_student(request: Request, db: Session = Depends(get_db)):
     current = ensure_access(request, "students")
@@ -381,6 +526,7 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
     )
     db.add(student)
     db.flush()
+    validate_enrollment_date_overlap(db, student.id, started_on, ended_on)
     db.add(
         models.StudentEnrollment(
             student_id=student.id,
@@ -459,6 +605,7 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
         enrollment.started_on = started_on
         enrollment.ended_on = ended_on
         enrollment.status = "active"
+        validate_enrollment_date_overlap(db, item.id, started_on, ended_on, exclude_id=enrollment.id)
         if enrollment.id is None:
             db.add(enrollment)
     db.commit()
@@ -534,12 +681,17 @@ async def create_enrollment(request: Request, db: Session = Depends(get_db)):
     student = db.get(models.Student, student_id)
     if student is None or not student_allowed(db, current, student_id, campus_id):
         raise HTTPException(status_code=400, detail="学生或服务点无效")
+    started_on = parse_date(text(form, "started_on"))
+    ended_on = parse_date(text(form, "ended_on"))
+    if started_on is None or ended_on is None:
+        raise HTTPException(status_code=400, detail="请填写有效的开始日期和结束日期")
+    validate_enrollment_date_overlap(db, student_id, started_on, ended_on)
     enrollment = models.StudentEnrollment(
         student_id=student_id,
         campus_id=campus_id,
         service_type=text(form, "service_type", "自习场地服务"),
-        started_on=parse_date(text(form, "started_on"), date.today()),
-        ended_on=parse_date(text(form, "ended_on")),
+        started_on=started_on,
+        ended_on=ended_on,
         status=text(form, "status", "active"),
     )
     db.add(enrollment)

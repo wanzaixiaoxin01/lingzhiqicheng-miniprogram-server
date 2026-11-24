@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>灵智启程后台</title>
+    <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    <link rel="stylesheet" href="/static/admin.css?v=20261116-7">
+  </head>
+  <body>
+    <main class="shell">
+      <aside class="sidebar"><div class="brand"><img src="/static/logo.png" alt="灵智启程"><div><b>灵智启程</b><span>运营后台</span></div></div>{% include "_nav.html" %}</aside>
+      <section class="workspace">
+        <header>
+          <div><h1>{{ title }}</h1><p>{{ item.grade }} · {{ item.school or '未填写学校' }} · {{ item.guardian_phone or '未绑定手机号' }}</p></div>
+          <div class="action-group"><a class="btn btn-primary" href="/admin/students/{{ item.id }}/enrollments/new">新增报名记录</a><a class="btn btn-ghost-secondary" href="/admin/students">返回列表</a></div>
+        </header>
+        <section class="card">
+          <div class="card-header"><h2 class="card-title">报名记录</h2><span class="text-secondary">共 {{ enrollments|length }} 条</span></div>
+          <div class="table-responsive"><table class="table table-vcenter card-table">
+            <thead><tr><th>有效期</th><th>网点</th><th>服务项目</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+              {% for enrollment in enrollments %}
+              <tr>
+                <td>{{ enrollment.started_on or '-' }} 至 {{ enrollment.ended_on or '-' }}</td>
+                <td>{{ enrollment.campus.name }}</td>
+                <td>{{ enrollment.service_type }}</td>
+                <td><span class="badge {% if enrollment.status == 'active' %}bg-green-lt text-green{% else %}bg-secondary-lt text-secondary{% endif %}">{% if enrollment.status == 'active' %}有效{% elif enrollment.status == 'completed' %}已结束{% else %}{{ enrollment.status }}{% endif %}</span></td>
+                <td><a class="action-link action-edit" href="/admin/students/{{ item.id }}/enrollments/{{ enrollment.id }}/edit">编辑</a></td>
+              </tr>
+              {% else %}<tr><td colspan="5">暂无报名记录</td></tr>{% endfor %}
+            </tbody>
+          </table></div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

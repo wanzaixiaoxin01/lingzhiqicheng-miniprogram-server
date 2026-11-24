@@ -6,7 +6,7 @@
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
     <link rel="stylesheet" href="/static/admin.css?v=20261116-5">
-    {% if resource == 'students' %}
+    {% if resource in ['students', 'student_enrollment'] %}
     <link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">
     <link rel="stylesheet" href="/static/student-validity-range.css?v=20261124-2">
     {% endif %}
@@ -25,7 +25,7 @@
           <div><h1>{{ title }}</h1><p>保存后，工作人员和家长端会按权限读取相关记录。</p></div>
         </header>
 
-        <form class="edit-form panel" method="post" action="{% if resource == 'staff' %}/admin/staff{% elif resource == 'students' %}/admin/students{% elif resource == 'enrollments' %}/admin/enrollments{% else %}/admin/visits{% endif %}{% if item %}/{{ item.id }}{% endif %}">
+        <form class="edit-form panel" method="post" action="{% if resource == 'staff' %}/admin/staff{% elif resource == 'students' %}/admin/students{% elif resource == 'student_enrollment' %}/admin/students/{{ student.id }}/enrollments{% if item %}/{{ item.id }}{% endif %}{% elif resource == 'enrollments' %}/admin/enrollments{% else %}/admin/visits{% endif %}">
           {% if resource == 'staff' %}
           <label>登录账号<input name="username" value="{{ item.username if item else '' }}" {{ 'readonly' if item else '' }} required></label>
           <label>姓名<input name="display_name" value="{{ item.display_name if item else '' }}" required></label>
@@ -56,6 +56,19 @@
           <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>在读</option><option value="inactive" {{ 'selected' if item and item.status == 'inactive' else '' }}>停用</option></select></label>
           <label class="form-full-width">备注<textarea name="note" maxlength="2000" placeholder="记录过敏、接送安排或其他需要工作人员留意的信息">{{ item.note if item and item.note else '' }}</textarea></label>
           {% if item %}<p class="binding-hint">家长绑定码：<code>{{ item.binding_code or '已绑定' }}</code>，用于小程序绑定孩子。{% if not item.guardian_user_id %}<button class="link-button" type="submit" formaction="/admin/students/{{ item.id }}/binding-code" formmethod="post">重新生成</button>{% endif %}</p>{% endif %}
+          {% elif resource == 'student_enrollment' %}
+          <p class="form-intro">学生：<strong>{{ student.name }}</strong>（{{ student.grade }}）</p>
+          <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if selected_campus == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
+          <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}" {{ 'selected' if selected_service_type == value else '' }}>{{ label }}</option>{% endfor %}</select></label>
+          <label class="validity-range-field" data-validity-range>有效期
+            <span class="validity-range-control">
+              <input id="student-started-on" name="started_on" type="text" inputmode="none" autocomplete="off" placeholder="开始日期" value="{{ item.started_on if item and item.started_on else '' }}" readonly required>
+              <span class="validity-range-arrow" aria-hidden="true">至</span>
+              <input id="student-ended-on" name="ended_on" type="text" inputmode="none" autocomplete="off" placeholder="结束日期" value="{{ item.ended_on if item and item.ended_on else '' }}" readonly required>
+            </span>
+            <small class="muted">有效期包含开始和结束当天</small>
+          </label>
+          <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>有效</option><option value="completed" {{ 'selected' if item and item.status == 'completed' else '' }}>已结束</option></select></label>
           {% elif resource == 'enrollments' %}
           <label>学生<select name="student_id" required>{% for student in students %}<option value="{{ student.id }}">{{ student.name }} · {{ student.grade }}</option>{% endfor %}</select></label>
           <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}">{{ campus.name }}</option>{% endfor %}</select></label>
@@ -75,7 +88,7 @@
         </form>
       </section>
     </main>
-    {% if resource == 'students' %}
+    {% if resource in ['students', 'student_enrollment'] %}
     <script src="/static/vendor/litepicker/litepicker.umd.js?v=2.0.12"></script>
     <script type="module" src="/static/student-validity-range.js?v=20261124-3"></script>
     {% endif %}

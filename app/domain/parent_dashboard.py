@@ -1,11 +1,12 @@
 from calendar import monthrange
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app import models
 from app.domain.parent_binding import link_unbound_students_by_phone, normalize_phone
+from app.repositories import BEIJING, select_parent_enrollment
 
 
 def mask_phone(value: str | None) -> str:
@@ -55,20 +56,22 @@ def build_parent_dashboard(db: Session, parent: models.User) -> dict:
 
     student_payloads = []
     for student in students:
-        enrollments = [
-            {
-                "id": item.id,
-                "campus_name": item.campus.name,
-                "course_title": item.course.title if item.course else None,
-                "service_type": item.service_type,
-                "started_on": item.started_on.isoformat() if item.started_on else None,
-                "ended_on": item.ended_on.isoformat() if item.ended_on else None,
-                "validity_label": validity_label(item.started_on, item.ended_on),
-                "status": item.status,
-            }
-            for item in student.enrollments
-            if item.status == "active"
-        ]
+        selected_enrollment = select_parent_enrollment(
+            student.enrollments,
+            datetime.now(BEIJING).date(),
+        )
+        enrollments = []
+        if selected_enrollment:
+            enrollments.append({
+                "id": selected_enrollment.id,
+                "campus_name": selected_enrollment.campus.name,
+                "course_title": selected_enrollment.course.title if selected_enrollment.course else None,
+                "service_type": selected_enrollment.service_type,
+                "started_on": selected_enrollment.started_on.isoformat(),
+                "ended_on": selected_enrollment.ended_on.isoformat(),
+                "validity_label": validity_label(selected_enrollment.started_on, selected_enrollment.ended_on),
+                "status": selected_enrollment.status,
+            })
         records = sorted(
             student.attendance_records,
             key=lambda item: (item.attendance_date, item.created_at),

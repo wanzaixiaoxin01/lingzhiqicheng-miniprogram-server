@@ -12,7 +12,13 @@ from app import models
 from app.auth import AdminIdentity, ROLE_ADMIN
 from app.db import Base, _ensure_schema_compatibility
 from app.domain.parent_dashboard import validity_label
-from app.routes.operations_admin import create_student, student_service_type, student_validity_dates
+from app.routes.operations_admin import (
+    create_student,
+    student_service_type,
+    student_validity_dates,
+    validate_enrollment_date_overlap,
+)
+from app.repositories import select_parent_enrollment
 
 
 class StudentValidityTest(unittest.TestCase):
@@ -28,6 +34,54 @@ class StudentValidityTest(unittest.TestCase):
             with self.assertRaises(HTTPException):
                 student_validity_dates(form)
         self.assertEqual(student_validity_dates({"started_on": "2026-11-24", "ended_on": "2026-11-30"}), (date(2026, 11, 24), date(2026, 11, 30)))
+
+    def test_enrollment_date_overlap_uses_closed_intervals_and_allows_adjacent_days(self):
+        engine = create_engine("sqlite+pysqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        db = Session(engine)
+        campus = models.Campus(name="中心店", address="测试地址", phone="13800138000")
+        student = models.Student(name="学生", grade="四年级")
+        db.add_all([campus, student])
+        db.flush()
+        existing = models.StudentEnrollment(
+            student_id=student.id,
+            campus_id=campus.id,
+            service_type="自习室场地服务",
+            started_on=date(2026, 1, 1),
+            ended_on=date(2026, 1, 31),
+        )
+        db.add(existing)
+        db.commit()
+
+        validate_enrollment_date_overlap(db, student.id, date(2026, 2, 1), date(2026, 2, 28))
+        with self.assertRaisesRegex(HTTPException, "报名日期不能与已有记录重叠"):
+            validate_enrollment_date_overlap(db, student.id, date(2026, 1, 31), date(2026, 2, 10))
+        validate_enrollment_date_overlap(
+            db, student.id, date(2026, 1, 1), date(2026, 1, 31), exclude_id=existing.id
+        )
+        db.close()
+        engine.dispose()
+
+    def test_parent_enrollment_selection_prefers_current_then_future_then_expired(self):
+        engine = create_engine("sqlite+pysqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        db = Session(engine)
+        campus = models.Campus(name="中心店", address="测试地址", phone="13800138000")
+        student = models.Student(name="学生", grade="四年级")
+        db.add_all([campus, student])
+        db.flush()
+        records = [
+            models.StudentEnrollment(student_id=student.id, campus_id=campus.id, service_type="旧", status="active", started_on=date(2025, 1, 1), ended_on=date(2025, 12, 31)),
+            models.StudentEnrollment(student_id=student.id, campus_id=campus.id, service_type="当前", status="active", started_on=date(2026, 1, 1), ended_on=date(2026, 12, 31)),
+            models.StudentEnrollment(student_id=student.id, campus_id=campus.id, service_type="未来", status="active", started_on=date(2027, 1, 1), ended_on=date(2027, 12, 31)),
+        ]
+        db.add_all(records)
+        db.commit()
+        assert select_parent_enrollment(records, date(2026, 6, 1)).service_type == "当前"
+        assert select_parent_enrollment(records, date(2026, 12, 31) + __import__("datetime").timedelta(days=1)).service_type == "未来"
+        assert select_parent_enrollment(records, date(2028, 1, 1)).service_type == "未来"
+        db.close()
+        engine.dispose()
 
     def test_student_service_is_a_controlled_option(self):
         self.assertEqual(student_service_type({"service_type": "自习室场地服务"}), "自习室场地服务")

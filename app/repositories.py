@@ -49,6 +49,23 @@ class RollCallPage:
     full_day_count: int
 
 
+def select_parent_enrollment(enrollments: Sequence[models.StudentEnrollment], today: date) -> models.StudentEnrollment | None:
+    active = [
+        item for item in enrollments
+        if item.status == "active" and item.started_on and item.ended_on
+    ]
+    current = [item for item in active if item.started_on <= today <= item.ended_on]
+    if current:
+        return max(current, key=lambda item: (item.started_on, item.created_at))
+    future = [item for item in active if item.started_on > today]
+    if future:
+        return min(future, key=lambda item: (item.started_on, item.created_at))
+    expired = [item for item in active if item.ended_on < today]
+    if expired:
+        return max(expired, key=lambda item: (item.ended_on, item.created_at))
+    return None
+
+
 def paginate_query(db: Session, query, *, page: int = 1, page_size: int = 10) -> PaginatedItems:
     page_size = max(1, min(page_size, 100))
     total = db.scalar(select(func.count()).select_from(query.order_by(None).subquery())) or 0
@@ -224,6 +241,10 @@ def list_roll_call_roster(
             models.StudentEnrollment.campus_id == campus_id,
             models.StudentEnrollment.status == "active",
             models.Student.status == "active",
+            models.StudentEnrollment.started_on.is_not(None),
+            models.StudentEnrollment.ended_on.is_not(None),
+            models.StudentEnrollment.started_on <= attendance_date,
+            models.StudentEnrollment.ended_on >= attendance_date,
         )
         .order_by(models.Student.created_at.desc(), models.StudentEnrollment.created_at.desc())
     )
@@ -313,6 +334,10 @@ def set_roll_call_attendance(
             models.StudentEnrollment.campus_id == campus_id,
             models.StudentEnrollment.status == "active",
             models.Student.status == "active",
+            models.StudentEnrollment.started_on.is_not(None),
+            models.StudentEnrollment.ended_on.is_not(None),
+            models.StudentEnrollment.started_on <= attendance_date,
+            models.StudentEnrollment.ended_on >= attendance_date,
         )
         .order_by(models.StudentEnrollment.created_at.desc())
     )

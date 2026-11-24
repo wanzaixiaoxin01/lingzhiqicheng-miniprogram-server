@@ -42,6 +42,8 @@ class ParentDashboardTest(unittest.TestCase):
             course_id=course.id,
             service_type="智习室学习",
             status="active",
+            started_on=date(2026, 1, 1),
+            ended_on=date(2026, 12, 31),
         ))
         self.db.add_all([
             AttendanceRecord(

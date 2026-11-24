@@ -81,7 +81,7 @@
                   <td>{{ item.guardian_name or '-' }}<br><small>{{ item.guardian_phone or '未绑定手机号' }}</small></td>
                   <td>{% for enrollment in item.enrollments %}{{ enrollment.campus.name }}{% if not loop.last %}<br>{% endif %}{% else %}-{% endfor %}</td>
                   <td><code>{{ item.binding_code or '已绑定' }}</code></td>
-                  <td class="actions"><div class="action-group"><a class="action-link action-edit" href="/admin/students/{{ item.id }}/edit">编辑</a><form method="post" action="/admin/students/{{ item.id }}/delete" class="inline-form"><button class="action-link action-delete">删除</button></form></div></td>
+                  <td class="actions"><div class="action-group"><a class="action-link action-edit" href="/admin/students/{{ item.id }}/detail">报名记录</a><a class="action-link" href="/admin/students/{{ item.id }}/edit">编辑资料</a><form method="post" action="/admin/students/{{ item.id }}/delete" class="inline-form"><button class="action-link action-delete">删除</button></form></div></td>
                 </tr>
                 {% elif resource == 'enrollments' %}
                 <tr>
