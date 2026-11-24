@@ -50,6 +50,11 @@ def _ensure_schema_compatibility(target_engine=engine) -> None:
             if "manager_name" not in campus_columns:
                 connection.execute(text("ALTER TABLE campuses ADD COLUMN manager_name VARCHAR(80)"))
 
+        if "students" in tables:
+            student_columns = {column["name"] for column in inspector.get_columns("students")}
+            if "note" not in student_columns:
+                connection.execute(text("ALTER TABLE students ADD COLUMN note TEXT"))
+
         if "attendance_records" in tables:
             attendance_columns = {
                 column["name"] for column in inspector.get_columns("attendance_records")

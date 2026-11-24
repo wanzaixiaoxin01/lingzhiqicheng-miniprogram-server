@@ -19,6 +19,8 @@ from app.paths import TEMPLATES_DIR
 
 router = APIRouter(dependencies=[Depends(require_admin)])
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+STUDENT_SERVICE_OPTIONS = [("自习室场地服务", "自习室场地服务")]
+STUDENT_SERVICE_VALUES = {value for value, _ in STUDENT_SERVICE_OPTIONS}
 
 
 def redirect(path: str) -> RedirectResponse:
@@ -331,6 +333,8 @@ def new_student(request: Request, db: Session = Depends(get_db)):
             "item": None,
             "campuses": campuses,
             "selected_campus": "",
+            "service_options": STUDENT_SERVICE_OPTIONS,
+            "selected_service_type": STUDENT_SERVICE_OPTIONS[0][0],
         },
     )
 
@@ -346,11 +350,19 @@ def student_validity_dates(form):
     return start, end
 
 
+def student_service_type(form) -> str:
+    value = text(form, "service_type")
+    if value not in STUDENT_SERVICE_VALUES:
+        raise HTTPException(status_code=400, detail="请选择有效的服务项目")
+    return value
+
+
 @router.post("/students")
 async def create_student(request: Request, db: Session = Depends(get_db)):
     current = ensure_access(request, "students")
     form = await request.form()
     started_on, ended_on = student_validity_dates(form)
+    service_type = student_service_type(form)
     campus_id = text(form, "campus_id")
     if not campus_id or not campus_allowed(db, current, campus_id):
         raise HTTPException(status_code=400, detail="请选择有权限管理的智习室网点")
@@ -361,6 +373,7 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
         school=text(form, "school") or None,
         guardian_name=text(form, "guardian_name") or None,
         guardian_phone=text(form, "guardian_phone") or None,
+        note=text(form, "note") or None,
         binding_code=new_binding_code(),
         binding_code_expires_at=datetime.now(timezone.utc) + timedelta(days=30),
         status=text(form, "status", "active"),
@@ -372,7 +385,7 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
         models.StudentEnrollment(
             student_id=student.id,
             campus_id=campus_id,
-            service_type=text(form, "service_type", "自习场地服务"),
+            service_type=service_type,
             started_on=started_on,
             ended_on=ended_on,
             status="active",
@@ -397,6 +410,9 @@ def edit_student(item_id: str, request: Request, db: Session = Depends(get_db)):
     if campus_ids is not None:
         campuses = [campus for campus in campuses if campus.id in campus_ids]
     first_enrollment = item.enrollments[0] if item.enrollments else None
+    selected_service_type = first_enrollment.service_type if first_enrollment else ""
+    if selected_service_type not in STUDENT_SERVICE_VALUES:
+        selected_service_type = STUDENT_SERVICE_OPTIONS[0][0]
     return render(
         request,
         "operations_form.html",
@@ -406,7 +422,8 @@ def edit_student(item_id: str, request: Request, db: Session = Depends(get_db)):
             "item": item,
             "campuses": campuses,
             "selected_campus": first_enrollment.campus_id if first_enrollment else "",
-            "selected_service_type": first_enrollment.service_type if first_enrollment else "自习场地服务",
+            "service_options": STUDENT_SERVICE_OPTIONS,
+            "selected_service_type": selected_service_type,
         },
     )
 
@@ -423,12 +440,14 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
         raise HTTPException(status_code=403, detail="没有权限管理该学生")
     form = await request.form()
     started_on, ended_on = student_validity_dates(form)
+    service_type = student_service_type(form)
     item.name = text(form, "name")
     item.grade = text(form, "grade")
     item.gender = text(form, "gender") or None
     item.school = text(form, "school") or None
     item.guardian_name = text(form, "guardian_name") or None
     item.guardian_phone = text(form, "guardian_phone") or None
+    item.note = text(form, "note") or None
     item.status = text(form, "status", item.status)
     campus_id = text(form, "campus_id")
     if campus_id and not campus_allowed(db, current, campus_id):
@@ -436,7 +455,7 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
     if campus_id:
         enrollment = item.enrollments[0] if item.enrollments else models.StudentEnrollment(student_id=item.id)
         enrollment.campus_id = campus_id
-        enrollment.service_type = text(form, "service_type", enrollment.service_type or "自习场地服务")
+        enrollment.service_type = service_type
         enrollment.started_on = started_on
         enrollment.ended_on = ended_on
         enrollment.status = "active"

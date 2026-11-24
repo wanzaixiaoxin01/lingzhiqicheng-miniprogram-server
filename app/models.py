@@ -168,6 +168,7 @@ class Student(Base, TimestampMixin):
     school: Mapped[str | None] = mapped_column(String(120), nullable=True)
     guardian_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
     guardian_phone: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
     guardian_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
     binding_code: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True, index=True)
     binding_code_expires_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True), nullable=True)

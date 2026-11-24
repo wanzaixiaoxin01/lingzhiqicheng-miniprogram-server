@@ -679,6 +679,10 @@ th {
   font-weight: 900;
 }
 
+.edit-form .form-full-width {
+  grid-column: 1 / -1;
+}
+
 .cover-preview {
   display: grid;
   gap: 8px;

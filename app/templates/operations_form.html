@@ -40,11 +40,12 @@
           <label>学校<input name="school" value="{{ item.school if item else '' }}"></label>
           <label>性别<input name="gender" value="{{ item.gender if item else '' }}"></label>
           <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if selected_campus == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
-          <label>服务项目<input name="service_type" value="{{ selected_service_type if item else '自习场地服务' }}" placeholder="如：自习场地服务、兴趣活动"></label>
+          <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}" {{ 'selected' if selected_service_type == value else '' }}>{{ label }}</option>{% endfor %}</select></label>
           <label>开始日期<input name="started_on" type="date" value="{{ (item.enrollments[0].started_on or '') if item and item.enrollments else '' }}" required></label>
           <label>结束日期<input name="ended_on" type="date" value="{{ (item.enrollments[0].ended_on or '') if item and item.enrollments else '' }}" required></label>
           <p class="muted">有效期包含开始和结束当天，例如 11 月 24 日至 11 月 30 日为 7 天。</p>
           <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>在读</option><option value="inactive" {{ 'selected' if item and item.status == 'inactive' else '' }}>停用</option></select></label>
+          <label class="form-full-width">备注<textarea name="note" maxlength="2000" placeholder="记录过敏、接送安排或其他需要工作人员留意的信息">{{ item.note if item and item.note else '' }}</textarea></label>
           {% if item %}<p class="binding-hint">家长绑定码：<code>{{ item.binding_code or '已绑定' }}</code>，用于小程序绑定孩子。{% if not item.guardian_user_id %}<button class="link-button" type="submit" formaction="/admin/students/{{ item.id }}/binding-code" formmethod="post">重新生成</button>{% endif %}</p>{% endif %}
           {% elif resource == 'enrollments' %}
           <label>学生<select name="student_id" required>{% for student in students %}<option value="{{ student.id }}">{{ student.name }} · {{ student.grade }}</option>{% endfor %}</select></label>
