@@ -38,7 +38,10 @@ class StudentValidityTest(unittest.TestCase):
     def test_student_form_uses_select_dates_and_note(self):
         template = (Path(__file__).parents[1] / "app/templates/operations_form.html").read_text(encoding="utf-8")
         self.assertIn('<select name="service_type" required>', template)
-        self.assertIn('type="date"', template)
+        self.assertIn('data-validity-range', template)
+        self.assertIn('name="started_on" type="text"', template)
+        self.assertIn('name="ended_on" type="text"', template)
+        self.assertIn('student-validity-range.js', template)
         self.assertIn('<textarea name="note"', template)
 
     def test_create_student_saves_note_service_and_dates(self):

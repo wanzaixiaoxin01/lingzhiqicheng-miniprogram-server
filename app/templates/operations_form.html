@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
+    {% if resource == 'students' %}<link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">{% endif %}
     <link rel="stylesheet" href="/static/admin.css?v=20261116-5">
   </head>
   <body>
@@ -41,9 +42,21 @@
           <label>性别<input name="gender" value="{{ item.gender if item else '' }}"></label>
           <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if selected_campus == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
           <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}" {{ 'selected' if selected_service_type == value else '' }}>{{ label }}</option>{% endfor %}</select></label>
-          <label>开始日期<input name="started_on" type="date" value="{{ (item.enrollments[0].started_on or '') if item and item.enrollments else '' }}" required></label>
-          <label>结束日期<input name="ended_on" type="date" value="{{ (item.enrollments[0].ended_on or '') if item and item.enrollments else '' }}" required></label>
-          <p class="muted">有效期包含开始和结束当天，例如 11 月 24 日至 11 月 30 日为 7 天。</p>
+          <label class="form-full-width validity-range-field" data-validity-range>有效期
+            <span class="validity-range-control">
+              <input id="student-started-on" name="started_on" type="text" inputmode="none" autocomplete="off" placeholder="开始日期" value="{{ (item.enrollments[0].started_on or '') if item and item.enrollments else '' }}" readonly required>
+              <span class="validity-range-arrow" aria-hidden="true">至</span>
+              <input id="student-ended-on" name="ended_on" type="text" inputmode="none" autocomplete="off" placeholder="结束日期" value="{{ (item.enrollments[0].ended_on or '') if item and item.enrollments else '' }}" readonly required>
+            </span>
+            <span class="validity-presets" aria-label="快捷选择有效期">
+              <button type="button" data-validity-days="7">7天</button>
+              <button type="button" data-validity-months="1">1个月</button>
+              <button type="button" data-validity-months="3">3个月</button>
+              <button type="button" data-validity-months="6">半年</button>
+              <button type="button" data-validity-months="12">1年</button>
+            </span>
+            <small class="muted">有效期包含开始和结束当天</small>
+          </label>
           <label>状态<select name="status"><option value="active" {{ 'selected' if not item or item.status == 'active' else '' }}>在读</option><option value="inactive" {{ 'selected' if item and item.status == 'inactive' else '' }}>停用</option></select></label>
           <label class="form-full-width">备注<textarea name="note" maxlength="2000" placeholder="记录过敏、接送安排或其他需要工作人员留意的信息">{{ item.note if item and item.note else '' }}</textarea></label>
           {% if item %}<p class="binding-hint">家长绑定码：<code>{{ item.binding_code or '已绑定' }}</code>，用于小程序绑定孩子。{% if not item.guardian_user_id %}<button class="link-button" type="submit" formaction="/admin/students/{{ item.id }}/binding-code" formmethod="post">重新生成</button>{% endif %}</p>{% endif %}
@@ -66,5 +79,9 @@
         </form>
       </section>
     </main>
+    {% if resource == 'students' %}
+    <script src="/static/vendor/litepicker/litepicker.umd.js?v=2.0.12"></script>
+    <script type="module" src="/static/student-validity-range.js?v=20261124-1"></script>
+    {% endif %}
   </body>
 </html>
