@@ -410,6 +410,29 @@ th {
   background: #b42318;
 }
 
+.admin-toast {
+  position: fixed;
+  left: 50%;
+  top: 24px;
+  z-index: 1100;
+  max-width: min(90vw, 520px);
+  padding: 10px 16px;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+  color: #842029;
+  background: #f8d7da;
+  box-shadow: 0 8px 24px rgba(31, 41, 55, .14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -8px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+.admin-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .campus-list span {
   display: block;
 }

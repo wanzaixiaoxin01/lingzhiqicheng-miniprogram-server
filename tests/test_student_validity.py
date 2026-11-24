@@ -97,6 +97,7 @@ class StudentValidityTest(unittest.TestCase):
         self.assertIn('name="ended_on" type="text"', template)
         self.assertIn('student-validity-range.css?v=20261124-2', template)
         self.assertIn('student-validity-range.js', template)
+        self.assertIn('admin-form.js?v=20261125-1', template)
         self.assertNotIn('class="validity-presets"', template)
         self.assertIn('<textarea name="note"', template)
 
