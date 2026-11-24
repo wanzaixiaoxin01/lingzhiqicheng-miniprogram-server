@@ -1,23 +1,58 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { presetEndDate } from "../app/static/student-validity-range.js";
+import { initStudentValidityRange } from "../app/static/student-validity-range.js";
 
-function iso(date) {
-  const pad = (number) => String(number).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+function fixture() {
+  const startInput = { value: "" };
+  const endInput = { value: "" };
+  let controlClick;
+  const control = {
+    addEventListener(event, callback) {
+      assert.equal(event, "click");
+      controlClick = callback;
+    }
+  };
+  const root = {
+    dataset: {},
+    querySelector(selector) {
+      return {
+        '[name="started_on"]': startInput,
+        '[name="ended_on"]': endInput,
+        ".validity-range-control": control
+      }[selector];
+    }
+  };
+
+  return { root, startInput, endInput, getControlClick: () => controlClick };
 }
 
-test("validity presets include both the start and end day", () => {
-  const start = new Date(2026, 10, 24);
-  assert.equal(iso(presetEndDate(start, { days: 7 })), "2026-11-30");
-  assert.equal(iso(presetEndDate(start, { months: 1 })), "2026-12-23");
-  assert.equal(iso(presetEndDate(start, { months: 3 })), "2027-02-23");
-  assert.equal(iso(presetEndDate(start, { months: 6 })), "2027-05-23");
-  assert.equal(iso(presetEndDate(start, { months: 12 })), "2027-11-23");
+class FakeLitepicker {
+  constructor(options) {
+    this.options = options;
+    this.shownFor = [];
+  }
+  show(input) {
+    this.shownFor.push(input);
+  }
+}
+
+test("the compact range control opens one shared two-month picker", () => {
+  const { root, startInput, endInput, getControlClick } = fixture();
+
+  const picker = initStudentValidityRange(root, FakeLitepicker);
+  assert.equal(picker.options.element, startInput);
+  assert.equal(picker.options.elementEnd, endInput);
+  assert.equal(picker.options.numberOfMonths, 2);
+  assert.equal(picker.options.splitView, false);
+  assert.equal(root.dataset.validityReady, "true");
+
+  getControlClick()({ target: endInput });
+  assert.deepEqual(picker.shownFor, [endInput]);
 });
 
-test("month presets clamp dates at month boundaries", () => {
-  assert.equal(iso(presetEndDate(new Date(2028, 1, 29), { months: 12 })), "2029-02-27");
-  assert.equal(iso(presetEndDate(new Date(2026, 0, 31), { months: 1 })), "2026-02-27");
+test("initialization accepts the namespace exposed by the vendored UMD build", () => {
+  const { root } = fixture();
+  const picker = initStudentValidityRange(root, { Litepicker: FakeLitepicker, default: FakeLitepicker });
+  assert.ok(picker instanceof FakeLitepicker);
 });

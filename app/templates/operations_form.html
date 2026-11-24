@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    {% if resource == 'students' %}<link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">{% endif %}
     <link rel="stylesheet" href="/static/admin.css?v=20261116-5">
+    {% if resource == 'students' %}
+    <link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">
+    <link rel="stylesheet" href="/static/student-validity-range.css?v=20261124-2">
+    {% endif %}
   </head>
   <body>
     <main class="shell">
@@ -42,18 +45,11 @@
           <label>性别<input name="gender" value="{{ item.gender if item else '' }}"></label>
           <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if selected_campus == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
           <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}" {{ 'selected' if selected_service_type == value else '' }}>{{ label }}</option>{% endfor %}</select></label>
-          <label class="form-full-width validity-range-field" data-validity-range>有效期
+          <label class="validity-range-field" data-validity-range>有效期
             <span class="validity-range-control">
               <input id="student-started-on" name="started_on" type="text" inputmode="none" autocomplete="off" placeholder="开始日期" value="{{ (item.enrollments[0].started_on or '') if item and item.enrollments else '' }}" readonly required>
               <span class="validity-range-arrow" aria-hidden="true">至</span>
               <input id="student-ended-on" name="ended_on" type="text" inputmode="none" autocomplete="off" placeholder="结束日期" value="{{ (item.enrollments[0].ended_on or '') if item and item.enrollments else '' }}" readonly required>
-            </span>
-            <span class="validity-presets" aria-label="快捷选择有效期">
-              <button type="button" data-validity-days="7">7天</button>
-              <button type="button" data-validity-months="1">1个月</button>
-              <button type="button" data-validity-months="3">3个月</button>
-              <button type="button" data-validity-months="6">半年</button>
-              <button type="button" data-validity-months="12">1年</button>
             </span>
             <small class="muted">有效期包含开始和结束当天</small>
           </label>
@@ -81,7 +77,7 @@
     </main>
     {% if resource == 'students' %}
     <script src="/static/vendor/litepicker/litepicker.umd.js?v=2.0.12"></script>
-    <script type="module" src="/static/student-validity-range.js?v=20261124-1"></script>
+    <script type="module" src="/static/student-validity-range.js?v=20261124-3"></script>
     {% endif %}
   </body>
 </html>

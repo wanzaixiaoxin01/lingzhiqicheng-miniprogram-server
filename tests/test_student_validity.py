@@ -41,7 +41,9 @@ class StudentValidityTest(unittest.TestCase):
         self.assertIn('data-validity-range', template)
         self.assertIn('name="started_on" type="text"', template)
         self.assertIn('name="ended_on" type="text"', template)
+        self.assertIn('student-validity-range.css?v=20261124-2', template)
         self.assertIn('student-validity-range.js', template)
+        self.assertNotIn('class="validity-presets"', template)
         self.assertIn('<textarea name="note"', template)
 
     def test_create_student_saves_note_service_and_dates(self):
