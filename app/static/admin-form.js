@@ -26,7 +26,7 @@ document.addEventListener('submit', async event => {
   const button = submitter instanceof HTMLButtonElement ? submitter : form.querySelector('button[type="submit"], button:not([type])');
   if (button) button.disabled = true;
   try {
-    const action = submitter?.formAction || form.action;
+    const action = submitter?.hasAttribute('formaction') ? submitter.formAction : form.action;
     const response = await fetch(action, {
       method: (form.method || 'post').toUpperCase(),
       body: new FormData(form),

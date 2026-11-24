@@ -107,6 +107,8 @@ class StudentValidityTest(unittest.TestCase):
         self.assertIn("新增报名记录", template)
         self.assertIn('data-validity-range', template)
         self.assertNotIn('enrollments/new', template)
+        form_script = (Path(__file__).parents[1] / "app/static/admin-form.js").read_text(encoding="utf-8")
+        self.assertIn("hasAttribute('formaction')", form_script)
 
     def test_create_student_saves_note_service_and_dates(self):
         engine = create_engine("sqlite+pysqlite:///:memory:")
