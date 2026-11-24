@@ -146,6 +146,7 @@ class ParentEnrollmentOut(BaseModel):
     service_type: str
     started_on: date | None = None
     ended_on: date | None = None
+    validity_label: str = "待完善"
     status: str
 
 

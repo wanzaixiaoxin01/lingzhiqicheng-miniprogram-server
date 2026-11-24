@@ -335,10 +335,22 @@ def new_student(request: Request, db: Session = Depends(get_db)):
     )
 
 
+def student_validity_dates(form):
+    try:
+        start = date.fromisoformat(text(form, "started_on"))
+        end = date.fromisoformat(text(form, "ended_on"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="请填写有效的开始日期和结束日期")
+    if end < start:
+        raise HTTPException(status_code=400, detail="结束日期不能早于开始日期")
+    return start, end
+
+
 @router.post("/students")
 async def create_student(request: Request, db: Session = Depends(get_db)):
     current = ensure_access(request, "students")
     form = await request.form()
+    started_on, ended_on = student_validity_dates(form)
     campus_id = text(form, "campus_id")
     if not campus_id or not campus_allowed(db, current, campus_id):
         raise HTTPException(status_code=400, detail="请选择有权限管理的智习室网点")
@@ -361,7 +373,8 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
             student_id=student.id,
             campus_id=campus_id,
             service_type=text(form, "service_type", "自习场地服务"),
-            started_on=parse_date(text(form, "started_on"), date.today()),
+            started_on=started_on,
+            ended_on=ended_on,
             status="active",
         )
     )
@@ -409,6 +422,7 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
     ):
         raise HTTPException(status_code=403, detail="没有权限管理该学生")
     form = await request.form()
+    started_on, ended_on = student_validity_dates(form)
     item.name = text(form, "name")
     item.grade = text(form, "grade")
     item.gender = text(form, "gender") or None
@@ -423,7 +437,8 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
         enrollment = item.enrollments[0] if item.enrollments else models.StudentEnrollment(student_id=item.id)
         enrollment.campus_id = campus_id
         enrollment.service_type = text(form, "service_type", enrollment.service_type or "自习场地服务")
-        enrollment.started_on = parse_date(text(form, "started_on"), enrollment.started_on or date.today())
+        enrollment.started_on = started_on
+        enrollment.ended_on = ended_on
         enrollment.status = "active"
         if enrollment.id is None:
             db.add(enrollment)

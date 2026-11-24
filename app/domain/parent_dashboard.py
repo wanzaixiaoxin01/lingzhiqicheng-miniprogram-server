@@ -1,3 +1,6 @@
+from calendar import monthrange
+from datetime import timedelta
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -20,6 +23,18 @@ def attendance_period_label(morning_present: bool, afternoon_present: bool) -> s
     if afternoon_present:
         return "下午"
     return "未到"
+
+
+def validity_label(start, end) -> str:
+    if not start or not end or end < start:
+        return "待完善"
+    for months, label in ((12, "1年"), (6, "半年"), (3, "3个月"), (1, "1个月")):
+        total = start.year * 12 + start.month - 1 + months
+        year, month = total // 12, total % 12 + 1
+        anniversary = start.replace(year=year, month=month, day=min(start.day, monthrange(year, month)[1]))
+        if end == anniversary - timedelta(days=1):
+            return label
+    return f"{(end - start).days + 1}天"
 
 
 def build_parent_dashboard(db: Session, parent: models.User) -> dict:
@@ -48,6 +63,7 @@ def build_parent_dashboard(db: Session, parent: models.User) -> dict:
                 "service_type": item.service_type,
                 "started_on": item.started_on.isoformat() if item.started_on else None,
                 "ended_on": item.ended_on.isoformat() if item.ended_on else None,
+                "validity_label": validity_label(item.started_on, item.ended_on),
                 "status": item.status,
             }
             for item in student.enrollments
