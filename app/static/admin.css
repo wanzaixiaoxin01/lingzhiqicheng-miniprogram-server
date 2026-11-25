@@ -1206,15 +1206,25 @@ th {
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1.25fr) auto auto minmax(100px, auto);
   align-items: end;
   gap: 14px;
+  padding-right: 24px !important;
+  padding-left: 24px !important;
 }
 
 .lead-filter-field {
   min-width: 0;
   display: grid;
-  gap: 7px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
 }
 
-.lead-filter-field .form-label { display: block; }
+.lead-filter-field .form-label {
+  display: block;
+  margin: 0;
+  white-space: nowrap;
+}
+.lead-filter-field .form-control,
+.lead-filter-field .form-select { width: 100%; }
 .lead-filter-submit,
 .lead-filter-reset { align-self: end; }
 .lead-filter-total { align-self: center; justify-self: end; white-space: nowrap; }
