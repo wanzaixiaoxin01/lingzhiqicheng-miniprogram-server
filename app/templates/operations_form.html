@@ -27,7 +27,7 @@
           <div><h1>{{ title }}</h1><p>保存后，工作人员和家长端会按权限读取相关记录。</p></div>
         </header>
 
-        <form class="edit-form panel" method="post" action="{% if resource == 'staff' %}/admin/staff{% elif resource == 'students' %}/admin/students{% elif resource == 'student_enrollment' %}/admin/students/{{ student.id }}/enrollments{% if item %}/{{ item.id }}{% endif %}{% elif resource == 'enrollments' %}/admin/enrollments{% else %}/admin/visits{% endif %}">
+        <form class="edit-form panel admin-form" method="post" action="{% if resource == 'staff' %}/admin/staff{% elif resource == 'students' %}/admin/students{% elif resource == 'student_enrollment' %}/admin/students/{{ student.id }}/enrollments{% if item %}/{{ item.id }}{% endif %}{% elif resource == 'enrollments' %}/admin/enrollments{% else %}/admin/visits{% endif %}">
           {% if resource == 'staff' %}
           <label>登录账号<input name="username" value="{{ item.username if item else '' }}" {{ 'readonly' if item else '' }} required></label>
           <label>姓名<input name="display_name" value="{{ item.display_name if item else '' }}" required></label>

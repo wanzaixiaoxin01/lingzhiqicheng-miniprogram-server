@@ -25,7 +25,7 @@
           </div>
         </header>
 
-        <form class="edit-form panel" method="post" enctype="multipart/form-data" action="{{ form_action(resource, item) }}">
+        <form class="edit-form panel admin-form" method="post" enctype="multipart/form-data" action="{{ form_action(resource, item) }}">
           {% if resource == 'banners' %}
           <label>标题<input name="title" value="{{ item.title if item else '' }}" required></label>
           <label>图片 URL<input name="image_url" value="{{ item.image_url if item else '' }}" required></label>

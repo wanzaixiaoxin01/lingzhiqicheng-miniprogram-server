@@ -36,7 +36,7 @@
           </a>
           {% endfor %}
         </nav>
-        <form class="card mb-3" method="get" action="/admin/leads">
+        <form class="card mb-3 admin-filter-bar" method="get" action="/admin/leads">
           <input type="hidden" name="follow_status" value="{{ filters.follow_status }}">
           <div class="card-body">
             <div class="row g-3 align-items-end">
@@ -52,7 +52,7 @@
 
         <section class="card">
           <div class="table-responsive">
-            <table class="table table-vcenter card-table lead-table">
+            <table class="table table-vcenter card-table admin-table lead-table">
               <thead><tr><th>家长信息</th><th>孩子与意向</th><th>网点与预约时间</th><th>当前状态</th><th>更新时间</th><th>跟进操作</th></tr></thead>
               <tbody>
                 {% for item in items %}
@@ -91,7 +91,7 @@
           {% include "_list_pagination.html" %}
         </section>
         {% else %}
-        <form class="card mb-3" method="get" action="/admin/{{ resource }}">
+        <form class="card mb-3 admin-filter-bar" method="get" action="/admin/{{ resource }}">
           <div class="card-body">
             <div class="row g-3 align-items-end">
               <div class="col-md-5"><label class="form-label">关键词</label><input class="form-control" name="search" value="{{ filters.search }}" placeholder="搜索名称、标题、地址或手机号"></div>
@@ -104,7 +104,7 @@
         </form>
 
         <section class="card">
-          <div class="table-responsive"><table class="table table-vcenter card-table">
+          <div class="table-responsive"><table class="table table-vcenter card-table admin-table">
             <thead>
               <tr>
                 <th>{{ '公告' if resource == 'materials' else '名称' }}</th>
