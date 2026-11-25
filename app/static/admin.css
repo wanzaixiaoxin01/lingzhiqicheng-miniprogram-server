@@ -680,6 +680,97 @@ th {
 
 .lead-status-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
+.admin-select {
+  position: relative;
+  min-width: 0;
+}
+
+.admin-select-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.admin-select-trigger {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #d6e1ed;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #f9fbfd;
+  color: #172b46;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-select-trigger:hover,
+.admin-select.is-open .admin-select-trigger,
+.admin-select-trigger:focus-visible {
+  border-color: #5b9bed;
+  box-shadow: 0 0 0 3px rgba(17, 104, 223, .1);
+  outline: none;
+}
+
+.admin-select-trigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-select-chevron {
+  flex: 0 0 auto;
+  color: #566b84;
+  font-size: 17px;
+  line-height: 1;
+  transform: translateY(-2px);
+}
+
+.admin-select-menu {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  display: none;
+  width: max-content;
+  min-width: 180px;
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: min(320px, calc(100vh - 24px));
+  overflow-y: auto;
+  padding: 6px;
+  border: 1px solid #dce6f1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(18, 51, 92, .16);
+}
+
+.admin-select-menu.is-open { display: grid; gap: 3px; }
+
+.admin-select-option {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #334963;
+  text-align: left;
+  white-space: nowrap;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-select-option:hover,
+.admin-select-option.is-selected { background: #edf4ff; color: #1766bd; }
+
 .empty-state {
   padding: 44px 20px;
   color: #8290a2;
