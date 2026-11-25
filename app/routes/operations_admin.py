@@ -1,5 +1,6 @@
 import secrets
 from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -107,6 +108,17 @@ def parse_date(value: str, fallback: date | None = None) -> date | None:
         return fallback
 
 
+def parse_amount(value: str) -> Decimal | None:
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        amount = Decimal(value)
+    except InvalidOperation as exc:
+        raise HTTPException(status_code=400, detail="费用金额格式无效") from exc
+    if amount < 0 or amount.as_tuple().exponent < -2:
+        raise HTTPException(status_code=400, detail="费用金额请输入不小于 0 且最多两位小数的数字")
+    return amount.quantize(Decimal("0.01"))
 def new_binding_code() -> str:
     return secrets.token_hex(4).upper()
 
@@ -382,6 +394,8 @@ async def create_student_enrollment(item_id: str, request: Request, db: Session 
         started_on=started_on,
         ended_on=ended_on,
         status=text(form, "status", "active"),
+        receivable_amount=parse_amount(text(form, "receivable_amount")),
+        received_amount=parse_amount(text(form, "received_amount")),
     ))
     db.commit()
     return redirect(f"/admin/students/{student.id}/detail")
@@ -425,6 +439,8 @@ async def update_student_enrollment(item_id: str, enrollment_id: str, request: R
     enrollment.started_on = started_on
     enrollment.ended_on = ended_on
     enrollment.status = text(form, "status", enrollment.status)
+    enrollment.receivable_amount = parse_amount(text(form, "receivable_amount"))
+    enrollment.received_amount = parse_amount(text(form, "received_amount"))
     db.commit()
     return redirect(f"/admin/students/{student.id}/detail")
 
@@ -524,6 +540,8 @@ async def create_student(request: Request, db: Session = Depends(get_db)):
             started_on=started_on,
             ended_on=ended_on,
             status="active",
+            receivable_amount=parse_amount(text(form, "receivable_amount")),
+            received_amount=parse_amount(text(form, "received_amount")),
         )
     )
     db.commit()
@@ -594,6 +612,8 @@ async def update_student(item_id: str, request: Request, db: Session = Depends(g
         enrollment.started_on = started_on
         enrollment.ended_on = ended_on
         enrollment.status = "active"
+        enrollment.receivable_amount = parse_amount(text(form, "receivable_amount"))
+        enrollment.received_amount = parse_amount(text(form, "received_amount"))
         validate_enrollment_date_overlap(db, item.id, started_on, ended_on, exclude_id=enrollment.id)
         if enrollment.id is None:
             db.add(enrollment)
@@ -682,6 +702,8 @@ async def create_enrollment(request: Request, db: Session = Depends(get_db)):
         started_on=started_on,
         ended_on=ended_on,
         status=text(form, "status", "active"),
+        receivable_amount=parse_amount(text(form, "receivable_amount")),
+        received_amount=parse_amount(text(form, "received_amount")),
     )
     db.add(enrollment)
     db.commit()

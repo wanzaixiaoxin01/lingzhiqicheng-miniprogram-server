@@ -55,6 +55,13 @@ def _ensure_schema_compatibility(target_engine=engine) -> None:
             if "note" not in student_columns:
                 connection.execute(text("ALTER TABLE students ADD COLUMN note TEXT"))
 
+        if "student_enrollments" in tables:
+            enrollment_columns = {column["name"] for column in inspector.get_columns("student_enrollments")}
+            if "receivable_amount" not in enrollment_columns:
+                connection.execute(text("ALTER TABLE student_enrollments ADD COLUMN receivable_amount NUMERIC(10, 2)"))
+            if "received_amount" not in enrollment_columns:
+                connection.execute(text("ALTER TABLE student_enrollments ADD COLUMN received_amount NUMERIC(10, 2)"))
+
         if "attendance_records" in tables:
             attendance_columns = {
                 column["name"] for column in inspector.get_columns("attendance_records")

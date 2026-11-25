@@ -23,6 +23,8 @@
           <form class="edit-form panel" method="post" action="/admin/students/{{ item.id }}/enrollments">
             <label>智习室网点<select name="campus_id" required>{% for campus in campuses %}<option value="{{ campus.id }}">{{ campus.name }}</option>{% endfor %}</select></label>
             <label>服务项目<select name="service_type" required>{% for value, label in service_options %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></label>
+            <label>应收金额<input name="receivable_amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 1999.00"></label>
+            <label>实收金额<input name="received_amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例如 1999.00"></label>
             <label class="validity-range-field" data-validity-range>有效期
               <span class="validity-range-control"><input name="started_on" type="text" inputmode="none" autocomplete="off" placeholder="开始日期" readonly required><span class="validity-range-arrow" aria-hidden="true">至</span><input name="ended_on" type="text" inputmode="none" autocomplete="off" placeholder="结束日期" readonly required></span>
               <small class="muted">有效期包含开始和结束当天</small>
@@ -34,17 +36,19 @@
         <section class="card">
           <div class="card-header"><h2 class="card-title">报名记录</h2><span class="text-secondary">共 {{ enrollments|length }} 条</span></div>
           <div class="table-responsive"><table class="table table-vcenter card-table">
-            <thead><tr><th>有效期</th><th>网点</th><th>服务项目</th><th>状态</th><th>操作</th></tr></thead>
+            <thead><tr><th>有效期</th><th>网点</th><th>服务项目</th><th>应收</th><th>实收</th><th>状态</th><th>操作</th></tr></thead>
             <tbody>
               {% for enrollment in enrollments %}
               <tr>
                 <td>{{ enrollment.started_on or '-' }} 至 {{ enrollment.ended_on or '-' }}</td>
                 <td>{{ enrollment.campus.name }}</td>
                 <td>{{ enrollment.service_type }}</td>
+                <td>{{ enrollment.receivable_amount if enrollment.receivable_amount is not none else '-' }}</td>
+                <td>{{ enrollment.received_amount if enrollment.received_amount is not none else '-' }}</td>
                 <td><span class="badge {% if enrollment.status == 'active' %}bg-green-lt text-green{% else %}bg-secondary-lt text-secondary{% endif %}">{% if enrollment.status == 'active' %}有效{% elif enrollment.status == 'completed' %}已结束{% else %}{{ enrollment.status }}{% endif %}</span></td>
                 <td><a class="action-link action-edit" href="/admin/students/{{ item.id }}/enrollments/{{ enrollment.id }}/edit">编辑</a></td>
               </tr>
-              {% else %}<tr><td colspan="5">暂无报名记录</td></tr>{% endfor %}
+              {% else %}<tr><td colspan="7">暂无报名记录</td></tr>{% endfor %}
             </tbody>
           </table></div>
         </section>

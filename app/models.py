@@ -195,6 +195,8 @@ class StudentEnrollment(Base, TimestampMixin):
     started_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     ended_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="active", index=True)
+    receivable_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
+    received_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     student: Mapped[Student] = relationship(back_populates="enrollments")
     campus: Mapped[Campus] = relationship()

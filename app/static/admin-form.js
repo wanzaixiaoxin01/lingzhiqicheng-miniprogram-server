@@ -21,6 +21,7 @@ function errorMessage(payload) {
 document.addEventListener('submit', async event => {
   const form = event.target;
   if (!(form instanceof HTMLFormElement) || form.dataset.nativeSubmit === 'true') return;
+  if ((form.method || 'get').toLowerCase() !== 'post') return;
   event.preventDefault();
   const submitter = event.submitter;
   const button = submitter instanceof HTMLButtonElement ? submitter : form.querySelector('button[type="submit"], button:not([type])');

@@ -1,6 +1,7 @@
 import asyncio
 import unittest
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -145,4 +146,26 @@ class StudentValidityTest(unittest.TestCase):
         columns = {column["name"]: column for column in inspect(engine).get_columns("students")}
         self.assertIn("note", columns)
         self.assertTrue(columns["note"]["nullable"])
+        engine.dispose()
+
+    def test_enrollment_fee_fields_are_nullable_and_rendered(self):
+        engine = create_engine("sqlite+pysqlite:///:memory:")
+        Base.metadata.create_all(engine)
+        db = Session(engine)
+        campus = models.Campus(name="中心店", address="测试地址", phone="13800138000")
+        student = models.Student(name="学生", grade="四年级")
+        db.add_all([campus, student])
+        db.flush()
+        enrollment = models.StudentEnrollment(
+            student_id=student.id, campus_id=campus.id, service_type="自习室场地服务",
+            receivable_amount=Decimal("1999.00"), received_amount=Decimal("1500.00"),
+        )
+        db.add(enrollment)
+        db.commit()
+        self.assertEqual(enrollment.receivable_amount, Decimal("1999.00"))
+        self.assertIsNone(models.StudentEnrollment(student_id=student.id, campus_id=campus.id, service_type="旧").received_amount)
+        template = (Path(__file__).parents[1] / "app/templates/student_detail.html").read_text(encoding="utf-8")
+        self.assertIn('name="receivable_amount"', template)
+        self.assertIn('name="received_amount"', template)
+        db.close()
         engine.dispose()

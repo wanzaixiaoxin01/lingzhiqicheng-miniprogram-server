@@ -53,7 +53,7 @@
               {% elif resource == 'students' %}
               <tr><th>学生</th><th>年级</th><th>家长联系方式</th><th>智习室网点</th><th>绑定码</th><th>操作</th></tr>
               {% elif resource == 'enrollments' %}
-              <tr><th>学生</th><th>智习室网点</th><th>服务项目</th><th>开始日期</th><th>状态</th></tr>
+              <tr><th>学生</th><th>智习室网点</th><th>服务项目</th><th>开始日期</th><th>应收</th><th>实收</th><th>状态</th></tr>
               {% else %}
               <tr><th>到店日期</th><th>学生</th><th>智习室网点</th><th>服务项目</th><th>记录人员</th><th>备注</th><th>操作</th></tr>
               {% endif %}
@@ -90,6 +90,8 @@
                   <td>{{ item.campus.name }}</td>
                   <td>{{ item.service_type }}</td>
                   <td>{{ item.started_on or '-' }}</td>
+                  <td>{{ item.receivable_amount if item.receivable_amount is not none else '-' }}</td>
+                  <td>{{ item.received_amount if item.received_amount is not none else '-' }}</td>
                   <td><span class="badge {{ 'bg-green-lt text-green' if item.status == 'active' else 'bg-secondary-lt text-secondary' }}">{{ '有效' if item.status == 'active' else '已结束' if item.status == 'completed' else item.status }}</span></td>
                 </tr>
                 {% else %}
