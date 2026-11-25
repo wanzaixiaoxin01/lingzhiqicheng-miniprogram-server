@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-10">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-16">
     <link rel="stylesheet" href="/static/vendor/litepicker/litepicker.css?v=2.0.12">
     <link rel="stylesheet" href="/static/student-validity-range.css?v=20261124-2">
     <script defer src="/static/admin-form.js?v=20261125-1"></script>
@@ -35,7 +35,7 @@
           </form>
         </section>
         <section class="card admin-data-section">
-          <div class="card-header"><h2 class="card-title">报名记录</h2><span class="text-secondary">共 {{ enrollments|length }} 条</span></div>
+          <div class="card-header"><h2 class="card-title">报名记录</h2></div>
           <div class="table-responsive"><table class="table table-vcenter card-table admin-table">
             <thead><tr><th>有效期</th><th>网点</th><th>服务项目</th><th>应收</th><th>实收</th><th>状态</th><th>操作</th></tr></thead>
             <tbody>
@@ -52,6 +52,7 @@
               {% else %}<tr><td colspan="7">暂无报名记录</td></tr>{% endfor %}
             </tbody>
           </table></div>
+          <div class="card-footer admin-count-footer"><span class="pagination-summary">共 <strong>{{ enrollments|length }}</strong> 条</span></div>
         </section>
       </section>
     </main>

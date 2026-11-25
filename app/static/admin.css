@@ -1396,6 +1396,185 @@ th {
   background: #f8fafc;
 }
 
+/* Global admin workspace rhythm: every page shares the same left edge,
+   control height, surface treatment, and table footer placement. */
+.workspace {
+  min-width: 0;
+  background: #f8fafc;
+}
+
+.workspace > header,
+.workspace > .metrics,
+.workspace > .admin-filter-bar,
+.workspace > .admin-form,
+.workspace > .admin-form-section,
+.workspace > .admin-data-section,
+.workspace > .panel,
+.workspace > .card {
+  width: min(1480px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.workspace > header {
+  margin-bottom: 20px;
+}
+
+.workspace > .admin-filter-bar,
+.workspace > form.admin-filter-bar {
+  padding: 0;
+  overflow: hidden;
+}
+
+.workspace > .admin-filter-bar .card-body,
+.workspace > form.admin-filter-bar .card-body {
+  padding: 16px 18px;
+}
+
+.workspace > .admin-filter-bar .form-label,
+.workspace > form.admin-filter-bar .form-label {
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.workspace > .admin-filter-bar .row,
+.workspace > form.admin-filter-bar .row {
+  align-items: end;
+}
+
+.workspace > .admin-filter-bar .btn,
+.workspace > form.admin-filter-bar .btn {
+  min-width: 76px;
+}
+
+.workspace > .card:not(.admin-filter-bar),
+.workspace > section.card:not(.admin-filter-bar),
+.workspace > .panel {
+  overflow: hidden;
+}
+
+.workspace > .card:not(.admin-filter-bar) .table-responsive,
+.workspace > .panel .table-responsive {
+  overflow-x: auto;
+}
+
+.workspace > .card:not(.admin-filter-bar) > .card-header,
+.workspace > .admin-data-section > .card-header,
+.workspace > .panel > .panel-head {
+  min-height: 56px;
+  padding: 14px 18px;
+  background: #fff;
+  border-bottom: 1px solid #edf1f5;
+}
+
+.workspace > .admin-data-section > .card-header .card-title,
+.workspace > .panel > .panel-head h2 {
+  color: var(--admin-ink);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.workspace .admin-table {
+  margin: 0;
+  background: #fff;
+}
+
+.workspace .admin-table thead th:first-child,
+.workspace .admin-table tbody td:first-child {
+  padding-left: 18px;
+}
+
+.workspace .admin-table thead th:last-child,
+.workspace .admin-table tbody td:last-child {
+  padding-right: 18px;
+}
+
+.workspace .card-footer {
+  min-height: 58px;
+  padding: 10px 18px;
+  border-top: 1px solid #edf1f5;
+  background: #fff;
+}
+
+.workspace .pagination-summary {
+  color: var(--admin-muted);
+  white-space: nowrap;
+}
+
+.admin-count-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.admin-form-section {
+  overflow: hidden;
+}
+
+.admin-form-section > .edit-form,
+.workspace > .edit-form {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.admin-form-actions button,
+.admin-form-actions a {
+  min-width: 78px;
+  min-height: var(--admin-control-height);
+}
+
+.admin-form-actions a {
+  justify-content: center;
+  border: 1px solid var(--admin-border);
+  background: #fff;
+}
+
+.admin-upload-bar .form-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.admin-upload-bar .card-body {
+  padding: 16px 18px;
+}
+
+.admin-data-section .text-secondary {
+  color: var(--admin-muted) !important;
+  font-size: 13px;
+}
+
+.login-form.admin-form {
+  padding: 28px;
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgba(18, 51, 92, .08);
+}
+
+.login-form.admin-form button {
+  width: 100%;
+  min-height: var(--admin-control-height);
+}
+
+@media (max-width: 700px) {
+  .workspace { padding: 20px 14px; }
+  .workspace > .admin-filter-bar .card-body,
+  .workspace > form.admin-filter-bar .card-body,
+  .admin-upload-bar .card-body { padding: 14px; }
+  .workspace .card-footer { padding: 10px 14px; }
+  .workspace .pagination-summary { font-size: 12px; }
+  .admin-form-actions { flex-wrap: wrap; }
+}
+
 @media (max-width: 900px) {
   .workspace { padding: 20px 16px; }
   .workspace > header { margin-bottom: 18px; }

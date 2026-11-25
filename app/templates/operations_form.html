@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-10">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-16">
     <script defer src="/static/admin-form.js?v=20261125-1"></script>
     <script defer src="/static/admin-dropdown.js?v=20261126-1"></script>
     {% if resource in ['students', 'student_enrollment'] %}
@@ -88,7 +88,7 @@
           <label>备注<textarea name="note" placeholder="可填写当天到店情况"></textarea></label>
           {% endif %}
 
-          <div class="form-actions"><button>保存</button><a href="/admin/{{ resource }}">返回</a></div>
+          <div class="form-actions admin-form-actions"><button>保存</button><a href="/admin/{{ resource }}">返回</a></div>
         </form>
       </section>
     </main>

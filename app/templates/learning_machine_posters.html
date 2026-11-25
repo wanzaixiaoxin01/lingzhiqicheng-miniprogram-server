@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>学习机海报管理 · 灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-10">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-16">
   </head>
   <body>
     <main class="shell">
@@ -18,7 +18,7 @@
           <div><h1>学习机海报管理</h1><p>小程序按这里的顺序展示海报，保存后无需重新发布小程序。</p></div>
         </header>
 
-        <form class="card mb-3 admin-filter-bar" method="post" enctype="multipart/form-data" action="/admin/learning-machine-posters">
+        <form class="card mb-3 admin-filter-bar admin-upload-bar" method="post" enctype="multipart/form-data" action="/admin/learning-machine-posters">
           <div class="card-body">
             <div class="row g-3 align-items-end">
               <div class="col"><label class="form-label">上传海报</label><input class="form-control" type="file" name="files" accept=".jpg,.jpeg,.png,.webp" multiple required><small class="form-hint">支持 JPG、PNG、WEBP；单张不超过 10 MB，最多配置 20 张。</small></div>
@@ -27,8 +27,8 @@
           </div>
         </form>
 
-        <section class="card">
-          <div class="card-header"><h2 class="card-title">当前海报</h2><span class="text-secondary ms-auto">共 {{ posters|length }} 张</span></div>
+        <section class="card admin-data-section">
+          <div class="card-header"><h2 class="card-title">当前海报</h2></div>
           {% if posters %}
           <div class="learning-poster-grid">
             {% for poster in posters %}
@@ -47,6 +47,7 @@
           {% else %}
           <div class="empty-state">尚未配置学习机海报，小程序将展示默认空状态。</div>
           {% endif %}
+          <div class="card-footer admin-count-footer"><span class="pagination-summary">共 <strong>{{ posters|length }}</strong> 张</span></div>
         </section>
       </section>
     </main>
