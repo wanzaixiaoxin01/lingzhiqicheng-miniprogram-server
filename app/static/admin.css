@@ -1200,3 +1200,139 @@ th {
 .lead-status-tab.is-active .lead-status-count { background: #326fce; color: #fff; }
 .lead-status-tab .lead-status-count.is-pending { background: #d63939; color: #fff; }
 .lead-status-tab .lead-status-count.is-empty { background: #e9eef5; color: #66758b; }
+
+/* Shared workspace treatment: compact filters and quiet data surfaces. */
+.workspace {
+  background: #f8fafc;
+}
+
+.workspace > header {
+  max-width: 1480px;
+}
+
+.workspace > .card,
+.workspace > .panel,
+.workspace > form.card,
+.workspace > section.card {
+  border-color: #e7edf4;
+  border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(18, 51, 92, .035);
+}
+
+.workspace > .admin-filter-bar,
+.workspace > form.admin-filter-bar {
+  border-radius: 8px 8px 0 0;
+  border-bottom-color: #edf1f5;
+  box-shadow: none;
+  margin-bottom: 0 !important;
+}
+
+.workspace > .admin-filter-bar + .card,
+.workspace > form.admin-filter-bar + .card {
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 3px 14px rgba(18, 51, 92, .035);
+}
+
+.workspace .admin-data-section,
+.workspace .admin-form-section {
+  border-color: #e7edf4;
+  border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(18, 51, 92, .035);
+}
+
+.workspace .admin-data-section .card-header,
+.workspace .admin-form-section .card-header {
+  min-height: 58px;
+  padding: 14px 20px;
+  border-bottom-color: #edf1f5;
+  background: #fff;
+}
+
+.workspace .admin-data-section .card-header .card-title,
+.workspace .admin-form-section .card-header .card-title {
+  color: #172b46;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.workspace > .panel.admin-data-section {
+  overflow: hidden;
+  background: #fff;
+}
+
+.workspace > .panel.admin-data-section > table {
+  margin-bottom: 0;
+}
+
+.workspace > .admin-filter-bar .card-body,
+.workspace > form.admin-filter-bar .card-body {
+  padding: 18px 20px;
+}
+
+.workspace > .admin-filter-bar .row,
+.workspace > form.admin-filter-bar .row {
+  --tblr-gutter-x: 1rem;
+  --tblr-gutter-y: .75rem;
+}
+
+.workspace .admin-table {
+  background: #fff;
+}
+
+.workspace .admin-table thead th {
+  background: #f4f6f9;
+  color: #475a71;
+}
+
+.workspace .admin-table tbody td:first-child strong {
+  color: #172b46;
+}
+
+.workspace .admin-table .actions {
+  min-width: 150px;
+}
+
+.workspace .form-actions {
+  padding-top: 4px;
+}
+
+.workspace .form-actions a {
+  min-height: var(--admin-control-height);
+  border: 1px solid #dce6f1;
+  background: #fff;
+  border-radius: var(--admin-radius);
+}
+
+.lead-status-tabs {
+  margin-bottom: 14px;
+  padding-top: 0;
+}
+
+.lead-status-tab {
+  padding: 11px 16px;
+  border-bottom-width: 2px;
+}
+
+.roll-call-workspace {
+  border-radius: 8px;
+  box-shadow: 0 3px 14px rgba(18, 51, 92, .035);
+}
+
+.roll-call-workspace .admin-filter-bar {
+  background: #fff;
+}
+
+.roll-call-workspace .roll-call-roster-head {
+  background: #fff;
+}
+
+.roll-call-workspace .student-card-grid,
+.roll-call-workspace .roll-call-empty {
+  background: #f8fafc;
+}
+
+@media (max-width: 900px) {
+  .workspace { padding: 20px 16px; }
+  .workspace > header { margin-bottom: 18px; }
+}
