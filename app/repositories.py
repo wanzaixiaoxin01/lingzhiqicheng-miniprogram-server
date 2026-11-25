@@ -422,6 +422,7 @@ def list_scoped_attendance(db: Session, campus_ids: list[str] | None = None) -> 
 def dashboard_operations_metrics(db: Session, campus_ids: list[str] | None = None) -> dict[str, int]:
     student_query = select(func.count(models.Student.id)).where(models.Student.status == "active")
     visit_query = select(func.count(models.AttendanceRecord.id))
+    lead_query = select(func.count(models.Lead.id)).where(models.Lead.follow_status == "pending")
     if campus_ids is not None:
         student_query = student_query.where(
             models.Student.id.in_(
@@ -429,9 +430,11 @@ def dashboard_operations_metrics(db: Session, campus_ids: list[str] | None = Non
             )
         )
         visit_query = visit_query.where(models.AttendanceRecord.campus_id.in_(campus_ids))
+        lead_query = lead_query.where(models.Lead.campus_id.in_(campus_ids))
     return {
         "active_students": db.scalar(student_query) or 0,
         "attendance_records": db.scalar(visit_query) or 0,
+        "pending_leads": db.scalar(lead_query) or 0,
     }
 
 
@@ -601,6 +604,13 @@ def count_leads_by_status(db: Session) -> dict[str, int]:
     ).all())
 
 
+def count_scoped_leads_by_status(db: Session, campus_ids: list[str] | None = None) -> dict[str, int]:
+    query = select(models.Lead.follow_status, func.count(models.Lead.id)).group_by(models.Lead.follow_status)
+    if campus_ids is not None:
+        query = query.where(models.Lead.campus_id.in_(campus_ids))
+    return dict(db.execute(query).all())
+
+
 def list_admin_leads(
     db: Session,
     *,
@@ -608,10 +618,13 @@ def list_admin_leads(
     parent_name: str = "",
     phone: str = "",
     campus_id: str = "",
+    campus_ids: list[str] | None = None,
     page: int = 1,
     page_size: int = 10,
 ) -> PaginatedItems:
     filters = []
+    if campus_ids is not None:
+        filters.append(models.Lead.campus_id.in_(campus_ids))
     if follow_status.strip():
         filters.append(models.Lead.follow_status == follow_status.strip())
     if parent_name.strip():
@@ -632,10 +645,13 @@ def list_admin_leads(
     return paginate_query(db, query, page=page, page_size=page_size)
 
 
-def list_latest_pending_leads(db: Session, limit: int = 8) -> Sequence[models.Lead]:
+def list_latest_pending_leads(db: Session, limit: int = 8, campus_ids: list[str] | None = None) -> Sequence[models.Lead]:
+    filters = [models.Lead.follow_status == "pending"]
+    if campus_ids is not None:
+        filters.append(models.Lead.campus_id.in_(campus_ids))
     return db.scalars(
         select(models.Lead)
-        .where(models.Lead.follow_status == "pending")
+        .where(*filters)
         .order_by(models.Lead.created_at.desc())
         .limit(limit)
     ).all()

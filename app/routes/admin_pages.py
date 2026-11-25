@@ -202,10 +202,12 @@ def logout(request: Request):
 def dashboard(request: Request, db: Session = Depends(get_db)):
     role = admin_role(request)
     is_platform_admin = role == ROLE_ADMIN
-    leads = repositories.list_latest_pending_leads(db) if is_platform_admin else []
-    metrics = repositories.dashboard_metrics(db) if is_platform_admin else repositories.dashboard_operations_metrics(
-        db, repositories.staff_campus_ids(db, getattr(request.state.admin_identity, "id", None))
+    identity = getattr(request.state, "admin_identity", None)
+    campus_ids = repositories.staff_campus_ids(db, getattr(identity, "id", None))
+    leads = repositories.list_latest_pending_leads(db) if is_platform_admin else (
+        repositories.list_latest_pending_leads(db, campus_ids=campus_ids) if role == "manager" else []
     )
+    metrics = repositories.dashboard_metrics(db) if is_platform_admin else repositories.dashboard_operations_metrics(db, campus_ids)
     return templates.TemplateResponse(
         request,
         "dashboard.html",
@@ -360,15 +362,17 @@ def list_resource(
             "phone": phone.strip(),
             "campus_id": campus_id.strip(),
         }
-        result = repositories.list_admin_leads(db, page=page, page_size=10, **filters)
+        identity = getattr(request.state, "admin_identity", None)
+        scoped_ids = repositories.staff_campus_ids(db, getattr(identity, "id", None)) if admin_role(request) == "manager" else None
+        result = repositories.list_admin_leads(db, page=page, page_size=10, campus_ids=scoped_ids, **filters)
 
         context.update(
             {
                 "items": result.items,
                 "lead_statuses": lead_statuses,
-                "lead_status_counts": repositories.count_leads_by_status(db),
+                "lead_status_counts": repositories.count_scoped_leads_by_status(db, scoped_ids),
                 "filters": filters,
-                "campuses": db.scalars(select(models.Campus).order_by(models.Campus.name)).all(),
+                "campuses": [campus for campus in db.scalars(select(models.Campus).order_by(models.Campus.name)).all() if scoped_ids is None or campus.id in scoped_ids],
                 **pagination_context(result, "/admin/leads", filters),
             }
         )

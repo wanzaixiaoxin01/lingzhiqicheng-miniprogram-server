@@ -15,7 +15,7 @@ ROLE_RESOURCES = {
         "students",
         "visits",
     },
-    ROLE_MANAGER: {"dashboard", "staff", "students", "visits"},
+    ROLE_MANAGER: {"dashboard", "staff", "students", "visits", "leads"},
     ROLE_TEACHER: {"dashboard", "students", "visits"},
 }
 

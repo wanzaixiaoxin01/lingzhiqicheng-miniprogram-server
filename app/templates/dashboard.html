@@ -23,9 +23,9 @@
         <header>
           <div>
             <h1>运营工作台</h1>
-            <p>{% if admin_role == 'admin' %}管理智习室网点、老师账号、小程序内容和预约线索。{% else %}管理所属智习室网点的学生和到店记录。{% endif %}</p>
+            <p>{% if admin_role == 'admin' %}管理智习室网点、老师账号、小程序内容和预约线索。{% elif admin_role == 'manager' %}管理所属智习室网点的预约线索、学生和到店记录。{% else %}管理所属智习室网点的学生和到店记录。{% endif %}</p>
           </div>
-          <a class="button" href="{% if admin_role == 'admin' %}/admin/leads{% else %}/admin/visits{% endif %}">{% if admin_role == 'admin' %}查看线索{% else %}查看到店记录{% endif %}</a>
+          <a class="button" href="{% if admin_role in ['admin', 'manager'] %}/admin/leads{% else %}/admin/visits{% endif %}">{% if admin_role in ['admin', 'manager'] %}查看预约线索{% else %}查看到店记录{% endif %}</a>
         </header>
 
         <section class="metrics">
@@ -37,15 +37,15 @@
           {% else %}
           <article><span>在读学生</span><b>{{ metrics.active_students }}</b></article>
           <article><span>到店记录</span><b>{{ metrics.attendance_records }}</b></article>
-          <article><span>快捷入口</span><b><a href="/admin/students">学生</a></b></article>
-          <article><span>快捷入口</span><b><a href="/admin/visits">到店点名</a></b></article>
+          {% if admin_role == 'manager' %}<article><span>待跟进预约</span><b>{{ metrics.pending_leads }}</b></article>{% else %}<article><span>学生报名</span><b><a href="/admin/students">进入</a></b></article>{% endif %}
+          <article><span>{% if admin_role == 'manager' %}学生报名{% else %}到店点名{% endif %}</span><b><a href="{% if admin_role == 'manager' %}/admin/students{% else %}/admin/visits{% endif %}">{% if admin_role == 'manager' %}进入{% else %}进入{% endif %}</a></b></article>
           {% endif %}
         </section>
 
-        {% if admin_role == 'admin' %}
+        {% if admin_role in ['admin', 'manager'] %}
         <section class="panel">
           <div class="panel-head">
-            <h2>待跟进预约</h2>
+            <h2>{% if admin_role == 'manager' %}本店待跟进预约{% else %}待跟进预约{% endif %}</h2>
             <a href="/admin/leads?follow_status=pending">查看全部</a>
           </div>
           <table>
@@ -80,7 +80,7 @@
         {% else %}
         <section class="panel quick-panel">
           <div class="panel-head"><h2>智习室网点工作</h2></div>
-          <div class="quick-links"><a class="button" href="/admin/students">管理学生</a>{% if admin_role == 'manager' %}<a class="button" href="/admin/staff">管理老师</a>{% endif %}<a class="button" href="/admin/visits">到店点名</a></div>
+          <div class="quick-links"><a class="button" href="/admin/students">学生报名</a><a class="button" href="/admin/visits">到店点名</a></div>
         </section>
         {% endif %}
       </section>

@@ -126,6 +126,16 @@ button,
   padding: 18px;
 }
 
+.metrics article b a {
+  color: #1168df;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+.metrics article b a:hover {
+  text-decoration: underline;
+}
+
 .metrics span {
   color: #66758a;
   font-weight: 800;

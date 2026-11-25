@@ -37,6 +37,7 @@ class OperationsDomainTest(unittest.TestCase):
         self.assertTrue(can_access_resource(ROLE_MANAGER, "students"))
         self.assertTrue(can_access_resource(ROLE_MANAGER, "staff"))
         self.assertTrue(can_access_resource(ROLE_MANAGER, "visits"))
+        self.assertTrue(can_access_resource(ROLE_MANAGER, "leads"))
         self.assertFalse(can_access_resource(ROLE_MANAGER, "campuses"))
         self.assertFalse(can_access_resource(ROLE_TEACHER, "staff"))
         self.assertFalse(can_access_resource(ROLE_TEACHER, "enrollments"))
@@ -50,6 +51,7 @@ class OperationsDomainTest(unittest.TestCase):
         self.assertNotIn("banners", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_ADMIN))
         self.assertNotIn("enrollments", menu_resources(ROLE_MANAGER))
+        self.assertIn("leads", menu_resources(ROLE_MANAGER))
         self.assertNotIn("settings", menu_resources(ROLE_ADMIN))
         self.assertIn("learning_machine_posters", menu_resources(ROLE_ADMIN))
 

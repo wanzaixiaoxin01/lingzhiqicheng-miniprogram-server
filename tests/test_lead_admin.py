@@ -78,6 +78,11 @@ class LeadAdminRepositoryTest(unittest.TestCase):
         self.assertEqual(result.total, 2)
         self.assertTrue(all(lead.campus_id == "campus-b" for lead in result.items))
 
+    def test_scoped_leads_only_include_allowed_campuses(self):
+        result = repositories.list_admin_leads(self.db, campus_ids=["campus-a"])
+        self.assertEqual(result.total, 3)
+        self.assertTrue(all(lead.campus_id == "campus-a" for lead in result.items))
+
     def render_leads(self, **filters):
         request = Request({"type": "http", "method": "GET", "path": "/admin/leads", "headers": [], "query_string": b""})
         return list_resource("leads", request, db=self.db, **filters)

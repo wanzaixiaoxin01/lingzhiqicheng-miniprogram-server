@@ -6,6 +6,8 @@
   <a class="{{ 'active' if section == 'articles' else '' }}" href="/admin/articles">文章/活动</a>
   <a class="{{ 'active' if section == 'materials' else '' }}" href="/admin/materials">空间公告</a>
   <a class="{{ 'active' if section == 'learning_machine_posters' else '' }}" href="/admin/learning-machine-posters">学习机海报</a>
+  {% endif %}
+  {% if admin_role in ['admin', 'manager'] %}
   <a class="{{ 'active' if section == 'leads' else '' }}" href="/admin/leads">预约线索</a>
   {% endif %}
   {% if admin_role in ['admin', 'manager'] %}
