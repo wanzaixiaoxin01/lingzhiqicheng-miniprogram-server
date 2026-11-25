@@ -1201,6 +1201,35 @@ th {
 .lead-status-tab .lead-status-count.is-pending { background: #d63939; color: #fff; }
 .lead-status-tab .lead-status-count.is-empty { background: #e9eef5; color: #66758b; }
 
+.lead-filter-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1.25fr) auto auto minmax(100px, auto);
+  align-items: end;
+  gap: 14px;
+}
+
+.lead-filter-field {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.lead-filter-field .form-label { display: block; }
+.lead-filter-submit,
+.lead-filter-reset { align-self: end; }
+.lead-filter-total { align-self: center; justify-self: end; white-space: nowrap; }
+
+@media (max-width: 1100px) {
+  .lead-filter-layout { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lead-filter-submit, .lead-filter-reset { width: 100%; }
+  .lead-filter-total { justify-self: start; }
+}
+
+@media (max-width: 700px) {
+  .lead-filter-layout { grid-template-columns: 1fr; }
+  .lead-filter-submit, .lead-filter-reset { width: auto; justify-self: start; }
+}
+
 /* Shared workspace treatment: compact filters and quiet data surfaces. */
 .workspace {
   background: #f8fafc;
