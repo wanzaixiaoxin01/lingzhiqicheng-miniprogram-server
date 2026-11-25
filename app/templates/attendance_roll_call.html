@@ -26,8 +26,16 @@
           <div class="roll-call-today">点名日期 <strong>{{ selected_date }}</strong></div>
         </header>
 
-        <form class="card mb-3 admin-filter-bar" method="get" action="/admin/visits">
-          <div class="card-body">
+        <section class="roll-call-metrics">
+          <article><span>今日应到</span><div><b data-total="expected">{{ expected_count }}</b><small>名学生</small></div></article>
+          <article class="morning"><span>上午已到</span><div><b data-total="morning">{{ morning_count }}</b><small data-rate="morning">到店率 {{ ((morning_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="afternoon"><span>下午已到</span><div><b data-total="afternoon">{{ afternoon_count }}</b><small data-rate="afternoon">到店率 {{ ((afternoon_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
+          <article class="full-day"><span>全天到店</span><div><b data-total="full-day">{{ full_day_count }}</b><small>上午、下午均到</small></div></article>
+        </section>
+
+        <section class="card roll-call-workspace">
+          <form class="admin-filter-bar" method="get" action="/admin/visits">
+            <div class="card-body">
             <div class="row g-3 align-items-end">
               <div class="col-md-2">
                 <label class="form-label">点名日期</label>
@@ -49,16 +57,9 @@
               <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/visits">重置</a></div>
             </div>
           </div>
-        </form>
+          </form>
 
-        <section class="roll-call-metrics">
-          <article><span>今日应到</span><div><b data-total="expected">{{ expected_count }}</b><small>名学生</small></div></article>
-          <article class="morning"><span>上午已到</span><div><b data-total="morning">{{ morning_count }}</b><small data-rate="morning">到店率 {{ ((morning_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
-          <article class="afternoon"><span>下午已到</span><div><b data-total="afternoon">{{ afternoon_count }}</b><small data-rate="afternoon">到店率 {{ ((afternoon_count / expected_count * 100) if expected_count else 0)|round(1) }}%</small></div></article>
-          <article class="full-day"><span>全天到店</span><div><b data-total="full-day">{{ full_day_count }}</b><small>上午、下午均到</small></div></article>
-        </section>
-
-        <section class="card roll-call-roster">
+        <section class="roll-call-roster">
           <div class="roll-call-roster-head">
             <div><strong>{{ (campuses | selectattr('id', 'equalto', selected_campus_id) | map(attribute='name') | first) or '学生' }}到店名单</strong><span>共 {{ expected_count }} 人</span></div>
             <small><i></i>点击后立即保存，再次点击可撤销</small>
@@ -92,6 +93,7 @@
           {% endif %}
 
           {% include "_list_pagination.html" %}
+        </section>
         </section>
 
         <div class="copy-toast" role="status" aria-live="polite" data-roll-call-toast>点名已保存</div>

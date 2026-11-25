@@ -536,6 +536,10 @@ th {
 .roll-call-metrics small { color: #8390a1; font-size: 12px; }
 
 .roll-call-roster { overflow: hidden; }
+.roll-call-workspace { overflow: hidden; }
+.roll-call-workspace .admin-filter-bar { border-bottom: 1px solid #e3ebf3; }
+.roll-call-workspace .admin-filter-bar .card-body { padding: 20px 22px; }
+.roll-call-workspace .roll-call-roster { border-radius: 0; }
 .roll-call-roster-head { display: flex; align-items: center; justify-content: space-between; padding: 17px 20px; border-bottom: 1px solid #e3ebf3; }
 .roll-call-roster-head > div { display: flex; align-items: center; gap: 10px; }
 .roll-call-roster-head strong { font-size: 17px; }
