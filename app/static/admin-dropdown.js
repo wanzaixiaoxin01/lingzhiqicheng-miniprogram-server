@@ -2,9 +2,9 @@
   const selectors = 'select:not(.lead-status-native):not([data-dropdown-ready])';
   const close = (dropdown) => {
     dropdown.classList.remove('is-open');
-    dropdown.querySelector('.admin-select-menu')?.classList.remove('is-open');
+    dropdown._adminMenu?.classList.remove('is-open');
     dropdown.querySelector('.admin-select-trigger')?.setAttribute('aria-expanded', 'false');
-    const menu = dropdown.querySelector('.admin-select-menu');
+    const menu = dropdown._adminMenu;
     if (menu) {
       menu.style.left = '';
       menu.style.top = '';
@@ -14,7 +14,7 @@
   const position = (dropdown) => {
     if (!dropdown.classList.contains('is-open')) return;
     const trigger = dropdown.querySelector('.admin-select-trigger');
-    const menu = dropdown.querySelector('.admin-select-menu');
+    const menu = dropdown._adminMenu;
     if (!trigger || !menu) return;
     const rect = trigger.getBoundingClientRect();
     const padding = 8;
@@ -49,6 +49,7 @@
     menu.setAttribute('role', 'listbox');
     menu.setAttribute('aria-label', trigger.getAttribute('aria-label'));
     document.body.appendChild(menu);
+    wrapper._adminMenu = menu;
 
     const sync = () => {
       const selected = select.options[select.selectedIndex];
