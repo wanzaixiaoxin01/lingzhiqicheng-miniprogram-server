@@ -94,6 +94,18 @@ class LeadAdminRepositoryTest(unittest.TestCase):
         self.assertIn('name="follow_status" value="pending"', html)
         self.assertNotIn("王小明爸爸", html)
 
+    def test_empty_child_fields_render_as_unknown(self):
+        self.db.add(models.Lead(
+            id="lead-empty", name="家长", child_name=None, child_age=None,
+            child_grade=None, child_school=None, phone="13800000000",
+            campus_id="campus-a", source="trial", follow_status="pending",
+            appointment_at=datetime(2026, 11, 20, 14, 30, tzinfo=timezone.utc),
+        ))
+        self.db.commit()
+        html = self.render_leads().body.decode()
+        self.assertIn("未知 · 未知 · 未知", html)
+        self.assertIn("当前就读学校：未知", html)
+
     def test_search_stays_within_tab_and_totals_remain_global(self):
         response = self.render_leads(follow_status="contacted", phone="5678", campus_id="campus-b")
         self.assertEqual([item.id for item in response.context["items"]], ["lead-1"])

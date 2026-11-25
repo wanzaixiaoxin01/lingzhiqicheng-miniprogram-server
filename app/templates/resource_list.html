@@ -62,7 +62,7 @@
                       <button class="action-link action-edit lead-copy" type="button" data-name="{{ item.name }}" data-phone="{{ item.phone }}" aria-label="复制{{ item.name }}的姓名和手机号">复制</button>
                     </div>
                   </td>
-                  <td><strong>{{ item.child_name or '姓名未填写' }} · {{ (item.child_age|string ~ '岁') if item.child_age else '年龄未填写' }} · {{ item.child_grade or '年级未填写' }}</strong><small>当前就读学校：{{ item.child_school or '未填写' }}</small><small>{{ lead_source_label(item.source) }}</small></td>
+                  <td><strong>{{ item.child_name or '未知' }} · {{ (item.child_age|string ~ '岁') if item.child_age else '未知' }} · {{ item.child_grade or '未知' }}</strong><small>当前就读学校：{{ item.child_school or '未知' }}</small><small>{{ lead_source_label(item.source) }}</small></td>
                   <td><strong>{{ item.campus.name }}</strong><small>{{ format_beijing_datetime(item.appointment_at)[:10] }}</small></td>
                   <td><span class="status-badge status-{{ item.follow_status }}">{{ display_resource_status(resource, item) }}</span></td>
                   <td><span class="date-text">{{ item.updated_at.strftime('%Y-%m-%d') if item.updated_at else '-' }}</span><small>{{ item.updated_at.strftime('%H:%M') if item.updated_at else '' }}</small></td>
