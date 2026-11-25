@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-14">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-15">
     <script defer src="/static/admin-dropdown.js?v=20261126-1"></script>
   </head>
   <body>
@@ -48,7 +48,6 @@
         </form>
 
         <section class="card">
-          <div class="admin-results-head"><strong>预约线索</strong><span class="text-secondary">共 <b>{{ pagination.total }}</b> 条</span></div>
           <div class="table-responsive">
             <table class="table table-vcenter card-table admin-table lead-table">
               <thead><tr><th>家长信息</th><th>孩子与意向</th><th>网点与预约时间</th><th>当前状态</th><th>更新时间</th><th>跟进操作</th></tr></thead>
@@ -101,7 +100,6 @@
         </form>
 
         <section class="card">
-          <div class="admin-results-head"><strong>{{ resource_title(resource) }}</strong><span class="text-secondary">共 <b>{{ pagination.total }}</b> 条</span></div>
           <div class="table-responsive"><table class="table table-vcenter card-table admin-table">
             <thead>
               <tr>

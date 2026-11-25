@@ -1,5 +1,5 @@
 <div class="card-footer d-flex align-items-center">
-  <p class="m-0 text-secondary">共 <strong>{{ pagination.total }}</strong> 条，第 {{ pagination.page }} / {{ pagination.total_pages }} 页</p>
+  <p class="m-0 text-secondary pagination-summary">共 <strong>{{ pagination.total }}</strong> 条，第 {{ pagination.page }} / {{ pagination.total_pages }} 页</p>
   <ul class="pagination m-0 ms-auto">
     <li class="page-item {{ 'disabled' if not previous_url else '' }}">
       <a class="page-link" href="{{ previous_url or '#' }}" tabindex="-1" aria-disabled="{{ 'true' if not previous_url else 'false' }}">上一页</a>

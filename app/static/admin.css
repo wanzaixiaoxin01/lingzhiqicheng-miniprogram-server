@@ -1338,6 +1338,7 @@ th {
 .admin-results-head strong { font-size: 16px; font-weight: 800; }
 .admin-results-head span { white-space: nowrap; }
 .admin-results-head b { color: var(--admin-primary); font-size: 17px; }
+.pagination-summary strong { color: var(--admin-primary); font-size: 16px; }
 
 .workspace .admin-table {
   background: #fff;
