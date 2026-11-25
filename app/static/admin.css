@@ -1206,8 +1206,8 @@ th {
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1.25fr) auto auto minmax(100px, auto);
   align-items: end;
   gap: 14px;
-  padding-right: 24px !important;
-  padding-left: 24px !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
 }
 
 .lead-filter-field {
