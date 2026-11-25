@@ -69,15 +69,13 @@
                   <td>
                     <form method="post" action="/admin/leads/{{ item.id }}/status" class="lead-update-form">
                       <input type="hidden" name="return_to" value="{{ current_url }}">
-                      <select class="form-select form-select-sm" name="follow_status" aria-label="跟进状态">
-                        <option value="pending" {{ 'selected' if item.follow_status == 'pending' else '' }}>待跟进</option>
-                        <option value="contacted" {{ 'selected' if item.follow_status == 'contacted' else '' }}>已联系</option>
-                        <option value="visited" {{ 'selected' if item.follow_status == 'visited' else '' }}>已到店</option>
-                        <option value="converted" {{ 'selected' if item.follow_status == 'converted' else '' }}>已成交</option>
-                        <option value="not_considering" {{ 'selected' if item.follow_status == 'not_considering' else '' }}>暂不考虑</option>
-                        <option value="invalid" {{ 'selected' if item.follow_status == 'invalid' else '' }}>无效</option>
-                        <option value="cancelled" {{ 'selected' if item.follow_status == 'cancelled' else '' }}>已取消</option>
-                      </select>
+                      <div class="lead-status-picker" data-status-picker>
+                        <button class="lead-status-trigger status-{{ item.follow_status }}" type="button" aria-haspopup="listbox" aria-expanded="false">{{ display_resource_status(resource, item) }}<span aria-hidden="true">⌄</span></button>
+                        <div class="lead-status-menu" role="listbox">
+                          {% for value, label in lead_statuses %}<button class="lead-status-option status-{{ value }} {{ 'is-selected' if item.follow_status == value else '' }}" type="button" role="option" data-value="{{ value }}" data-label="{{ label }}" aria-selected="{{ 'true' if item.follow_status == value else 'false' }}">{{ label }}</button>{% endfor %}
+                        </div>
+                        <select class="lead-status-native" name="follow_status" tabindex="-1" aria-hidden="true">{% for value, label in lead_statuses %}<option value="{{ value }}" {{ 'selected' if item.follow_status == value else '' }}>{{ label }}</option>{% endfor %}</select>
+                      </div>
                       <input class="form-control form-control-sm" name="follow_note" placeholder="填写跟进备注" value="{{ item.follow_note or '' }}">
                       <button class="btn btn-primary btn-sm">保存</button>
                     </form>
@@ -205,6 +203,29 @@
             }
           });
         });
+
+        document.querySelectorAll('[data-status-picker]').forEach((picker) => {
+          const trigger = picker.querySelector('.lead-status-trigger');
+          const native = picker.querySelector('.lead-status-native');
+          const options = picker.querySelectorAll('.lead-status-option');
+          trigger.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const open = picker.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', String(open));
+          });
+          options.forEach((option) => option.addEventListener('click', () => {
+            native.value = option.dataset.value;
+            trigger.childNodes[0].textContent = option.dataset.label;
+            trigger.className = `lead-status-trigger status-${option.dataset.value}`;
+            options.forEach((item) => item.classList.toggle('is-selected', item === option));
+            picker.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+          }));
+        });
+        document.addEventListener('click', () => document.querySelectorAll('[data-status-picker].is-open').forEach((picker) => {
+          picker.classList.remove('is-open');
+          picker.querySelector('.lead-status-trigger')?.setAttribute('aria-expanded', 'false');
+        }));
       })();
     </script>
     {% endif %}
