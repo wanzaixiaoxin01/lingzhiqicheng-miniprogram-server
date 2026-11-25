@@ -363,7 +363,14 @@ def list_resource(
             "campus_id": campus_id.strip(),
         }
         identity = getattr(request.state, "admin_identity", None)
-        scoped_ids = repositories.staff_campus_ids(db, getattr(identity, "id", None)) if admin_role(request) == "manager" else None
+        is_manager = admin_role(request) == "manager"
+        scoped_ids = repositories.staff_campus_ids(db, getattr(identity, "id", None)) if is_manager else None
+        scoped_campuses = [
+            campus for campus in db.scalars(select(models.Campus).order_by(models.Campus.name)).all()
+            if scoped_ids is None or campus.id in scoped_ids
+        ]
+        if is_manager and len(scoped_campuses) == 1 and not filters["campus_id"]:
+            filters["campus_id"] = scoped_campuses[0].id
         result = repositories.list_admin_leads(db, page=page, page_size=10, campus_ids=scoped_ids, **filters)
 
         context.update(
@@ -372,7 +379,8 @@ def list_resource(
                 "lead_statuses": lead_statuses,
                 "lead_status_counts": repositories.count_scoped_leads_by_status(db, scoped_ids),
                 "filters": filters,
-                "campuses": [campus for campus in db.scalars(select(models.Campus).order_by(models.Campus.name)).all() if scoped_ids is None or campus.id in scoped_ids],
+                "campuses": scoped_campuses,
+                "campus_filter_scoped": is_manager,
                 **pagination_context(result, "/admin/leads", filters),
             }
         )

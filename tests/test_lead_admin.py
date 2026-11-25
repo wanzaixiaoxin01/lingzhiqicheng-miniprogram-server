@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -98,6 +99,21 @@ class LeadAdminRepositoryTest(unittest.TestCase):
         self.assertIn('aria-current="page"', html)
         self.assertIn('name="follow_status" value="pending"', html)
         self.assertNotIn("王小明爸爸", html)
+
+    def test_manager_leads_filter_is_limited_to_assigned_campus(self):
+        request = Request({"type": "http", "method": "GET", "path": "/admin/leads", "headers": [], "query_string": b""})
+        request.state.admin_role = "manager"
+        request.state.admin_identity = SimpleNamespace(id="manager-1")
+        self.db.add(models.AdminUser(id="manager-1", username="manager", display_name="店长", password_hash="hash", role="manager", status="active"))
+        self.db.add(models.StaffCampus(staff_id="manager-1", campus_id="campus-a"))
+        self.db.commit()
+
+        response = list_resource("leads", request, db=self.db)
+        html = response.body.decode()
+        self.assertNotIn("全部网点", html)
+        self.assertIn('name="campus_id"', html)
+        self.assertIn('value="campus-a" selected', html)
+        self.assertEqual(response.context["pagination"].total, 3)
 
     def test_empty_child_fields_render_as_unknown(self):
         self.db.add(models.Lead(

@@ -40,7 +40,7 @@
           <input type="hidden" name="follow_status" value="{{ filters.follow_status }}">
           <div class="card-body">
             <div class="row g-3 align-items-end">
-              <div class="col-md-2"><label class="form-label">预约网点</label><select class="form-select" name="campus_id"><option value="">全部网点</option>{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if filters.campus_id == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></div>
+              <div class="col-md-2"><label class="form-label">预约网点</label><select class="form-select" name="campus_id">{% if not campus_filter_scoped %}<option value="">全部网点</option>{% endif %}{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if filters.campus_id == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></div>
               <div class="col-md-2"><label class="form-label">家长姓名</label><input class="form-control" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></div>
               <div class="col-md-2"><label class="form-label">家长手机号</label><input class="form-control" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></div>
               <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
