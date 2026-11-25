@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261116-7">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-8">
   </head>
   <body>
     <main class="shell">
@@ -204,28 +204,64 @@
           });
         });
 
+        const positionStatusMenu = (picker) => {
+          if (!picker.classList.contains('is-open')) return;
+          const trigger = picker.querySelector('.lead-status-trigger');
+          const menu = picker.querySelector('.lead-status-menu');
+          if (!trigger || !menu) return;
+          const rect = trigger.getBoundingClientRect();
+          const viewportPadding = 8;
+          menu.style.minWidth = `${Math.max(rect.width, 164)}px`;
+          const menuHeight = menu.offsetHeight;
+          const belowTop = rect.bottom + 6;
+          const aboveTop = rect.top - menuHeight - 6;
+          const top = (window.innerHeight - belowTop >= menuHeight + viewportPadding || aboveTop < viewportPadding)
+            ? belowTop
+            : aboveTop;
+          const left = Math.min(
+            Math.max(viewportPadding, rect.left),
+            Math.max(viewportPadding, window.innerWidth - menu.offsetWidth - viewportPadding),
+          );
+          menu.style.left = `${left}px`;
+          menu.style.top = `${Math.min(Math.max(viewportPadding, top), Math.max(viewportPadding, window.innerHeight - menu.offsetHeight - viewportPadding))}px`;
+        };
+
+        const closeStatusPicker = (picker) => {
+          picker.classList.remove('is-open');
+          picker.querySelector('.lead-status-trigger')?.setAttribute('aria-expanded', 'false');
+          const menu = picker.querySelector('.lead-status-menu');
+          if (menu) {
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.minWidth = '';
+          }
+        };
+
         document.querySelectorAll('[data-status-picker]').forEach((picker) => {
           const trigger = picker.querySelector('.lead-status-trigger');
           const native = picker.querySelector('.lead-status-native');
           const options = picker.querySelectorAll('.lead-status-option');
           trigger.addEventListener('click', (event) => {
             event.stopPropagation();
+            document.querySelectorAll('[data-status-picker].is-open').forEach((other) => {
+              if (other !== picker) closeStatusPicker(other);
+            });
             const open = picker.classList.toggle('is-open');
             trigger.setAttribute('aria-expanded', String(open));
+            if (open) positionStatusMenu(picker);
+            else closeStatusPicker(picker);
           });
           options.forEach((option) => option.addEventListener('click', () => {
             native.value = option.dataset.value;
             trigger.childNodes[0].textContent = option.dataset.label;
             trigger.className = `lead-status-trigger status-${option.dataset.value}`;
             options.forEach((item) => item.classList.toggle('is-selected', item === option));
-            picker.classList.remove('is-open');
-            trigger.setAttribute('aria-expanded', 'false');
+            closeStatusPicker(picker);
           }));
         });
-        document.addEventListener('click', () => document.querySelectorAll('[data-status-picker].is-open').forEach((picker) => {
-          picker.classList.remove('is-open');
-          picker.querySelector('.lead-status-trigger')?.setAttribute('aria-expanded', 'false');
-        }));
+        document.addEventListener('click', () => document.querySelectorAll('[data-status-picker].is-open').forEach(closeStatusPicker));
+        window.addEventListener('resize', () => document.querySelectorAll('[data-status-picker].is-open').forEach(positionStatusMenu));
+        window.addEventListener('scroll', () => document.querySelectorAll('[data-status-picker].is-open').forEach(positionStatusMenu), true);
       })();
     </script>
     {% endif %}
