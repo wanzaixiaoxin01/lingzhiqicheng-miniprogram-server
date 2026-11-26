@@ -1205,7 +1205,7 @@ th {
   display: grid;
   grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.25fr) minmax(220px, 1.25fr) auto auto minmax(100px, auto);
   align-items: end;
-  gap: 14px;
+  gap: 12px;
   padding-right: 0 !important;
   padding-left: 0 !important;
 }
@@ -1219,8 +1219,8 @@ th {
 }
 
 .admin-combo-field {
-  min-height: 58px;
-  padding: 0 14px;
+  min-height: 46px;
+  padding: 0 12px;
   border: 1px solid #dce6f1;
   border-radius: 10px;
   background: #fff;
@@ -1236,7 +1236,7 @@ th {
   display: block;
   margin: 0;
   color: #77869a;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -1251,14 +1251,14 @@ th {
 
 .admin-combo-field .admin-combo-input,
 .admin-combo-field .admin-combo-select {
-  min-height: 56px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
   color: var(--admin-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -1281,13 +1281,13 @@ th {
 }
 
 .admin-combo-field .admin-select-trigger {
-  min-height: 56px;
+  min-height: 44px;
   padding: 0;
   border: 0;
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
 }
 
