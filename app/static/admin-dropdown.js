@@ -8,6 +8,7 @@
     if (menu) {
       menu.style.left = '';
       menu.style.top = '';
+      menu.style.width = '';
       menu.style.minWidth = '';
     }
   };
@@ -18,6 +19,7 @@
     if (!trigger || !menu) return;
     const rect = trigger.getBoundingClientRect();
     const padding = 8;
+    menu.style.width = `${Math.max(rect.width, 180)}px`;
     menu.style.minWidth = `${Math.max(rect.width, 180)}px`;
     const menuHeight = menu.offsetHeight;
     const below = rect.bottom + 6;

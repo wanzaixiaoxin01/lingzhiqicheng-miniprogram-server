@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-20">
-    <script defer src="/static/admin-dropdown.js?v=20261126-1"></script>
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-21">
+    <script defer src="/static/admin-dropdown.js?v=20261126-2"></script>
   </head>
   <body>
     <main class="shell">
@@ -208,6 +208,7 @@
           if (!trigger || !menu) return;
           const rect = trigger.getBoundingClientRect();
           const viewportPadding = 8;
+          menu.style.width = `${Math.max(rect.width, 164)}px`;
           menu.style.minWidth = `${Math.max(rect.width, 164)}px`;
           const menuHeight = menu.offsetHeight;
           const belowTop = rect.bottom + 6;
@@ -230,6 +231,7 @@
           if (menu) {
             menu.style.left = '';
             menu.style.top = '';
+            menu.style.width = '';
             menu.style.minWidth = '';
           }
         };
