@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-16">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-17">
     <script defer src="/static/admin-dropdown.js?v=20261126-1"></script>
   </head>
   <body>
@@ -39,9 +39,9 @@
         <form class="card mb-3 admin-filter-bar" method="get" action="/admin/leads">
           <input type="hidden" name="follow_status" value="{{ filters.follow_status }}">
           <div class="card-body lead-filter-layout">
-            <label class="lead-filter-field"><span class="form-label">预约网点</span><select class="form-select" name="campus_id">{% if not campus_filter_scoped %}<option value="">全部网点</option>{% endif %}{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if filters.campus_id == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
-            <label class="lead-filter-field"><span class="form-label">家长姓名</span><input class="form-control" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></label>
-            <label class="lead-filter-field"><span class="form-label">家长手机号</span><input class="form-control" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></label>
+            <label class="lead-filter-field admin-combo-field"><span class="form-label">预约网点</span><select class="form-select admin-combo-select" name="campus_id">{% if not campus_filter_scoped %}<option value="">全部网点</option>{% endif %}{% for campus in campuses %}<option value="{{ campus.id }}" {{ 'selected' if filters.campus_id == campus.id else '' }}>{{ campus.name }}</option>{% endfor %}</select></label>
+            <label class="lead-filter-field admin-combo-field"><span class="form-label">家长姓名</span><input class="form-control admin-combo-input" name="parent_name" value="{{ filters.parent_name }}" placeholder="输入姓名或部分姓名"></label>
+            <label class="lead-filter-field admin-combo-field"><span class="form-label">家长手机号</span><input class="form-control admin-combo-input" name="phone" value="{{ filters.phone }}" inputmode="numeric" placeholder="输入完整手机号或后四位"></label>
             <button class="btn btn-primary lead-filter-submit" type="submit">查询</button>
             <a class="btn btn-ghost-secondary lead-filter-reset" href="/admin/leads?follow_status={{ filters.follow_status }}">重置</a>
           </div>

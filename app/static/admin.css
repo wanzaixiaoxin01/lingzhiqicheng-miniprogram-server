@@ -1218,13 +1218,91 @@ th {
   gap: 12px;
 }
 
-.lead-filter-field .form-label {
+.admin-combo-field {
+  min-height: 58px;
+  padding: 0 14px;
+  border: 1px solid #dce6f1;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.admin-combo-field:focus-within {
+  border-color: #6a9fe8;
+  box-shadow: 0 0 0 3px rgba(36, 104, 201, .12);
+}
+
+.admin-combo-field .form-label {
   display: block;
   margin: 0;
+  color: #77869a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
   white-space: nowrap;
 }
-.lead-filter-field .form-control,
-.lead-filter-field .form-select { width: 100%; }
+
+.admin-combo-field .admin-combo-input,
+.admin-combo-field .admin-combo-select,
+.admin-combo-field .admin-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-combo-field .admin-combo-input,
+.admin-combo-field .admin-combo-select {
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--admin-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-combo-field .admin-combo-input:focus,
+.admin-combo-field .admin-combo-select:focus {
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+.admin-combo-field .admin-combo-input::placeholder {
+  color: #a2adbc;
+  font-weight: 500;
+}
+
+.admin-combo-field .admin-select {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.admin-combo-field .admin-select-trigger {
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.admin-combo-field .admin-select-trigger:hover,
+.admin-combo-field .admin-select.is-open .admin-select-trigger,
+.admin-combo-field .admin-select-trigger:focus-visible {
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+.admin-combo-field .admin-select-chevron {
+  color: #748399;
+}
+
 .lead-filter-submit,
 .lead-filter-reset { align-self: end; }
 .lead-filter-total { align-self: center; justify-self: end; white-space: nowrap; }
