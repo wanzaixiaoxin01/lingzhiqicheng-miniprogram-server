@@ -1303,6 +1303,21 @@ th {
   color: #748399;
 }
 
+.workspace > .admin-filter-bar .admin-combo-field .form-label,
+.workspace > form.admin-filter-bar .admin-combo-field .form-label {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  line-height: 1;
+}
+
+.admin-combo-field .admin-combo-input,
+.admin-combo-field .admin-select-trigger {
+  height: 44px;
+  line-height: 1.2;
+}
+
 .lead-filter-submit,
 .lead-filter-reset { align-self: end; }
 .lead-filter-total { align-self: center; justify-self: end; white-space: nowrap; }
