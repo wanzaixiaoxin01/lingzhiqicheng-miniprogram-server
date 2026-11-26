@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-21">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-22">
     <script defer src="/static/admin-form.js?v=20261125-1"></script>
     <script defer src="/static/admin-dropdown.js?v=20261126-2"></script>
   </head>
@@ -29,15 +29,12 @@
 
         <form class="card mb-3 admin-filter-bar" method="get" action="/admin/{{ resource }}">
           <div class="card-body">
-            <div class="row g-3 align-items-end">
-              <div class="col-md-5">
-                <label class="form-label">关键词</label>
-                <input class="form-control" name="search" value="{{ filters.search }}" placeholder="{% if resource == 'staff' %}搜索姓名、账号或手机号{% elif resource == 'students' %}搜索学生、学校、家长或手机号{% else %}搜索学生、网点或服务项目{% endif %}">
-              </div>
+            <div class="admin-filter-row">
+              <label class="admin-combo-field admin-filter-wide"><span class="form-label">关键词</span><input class="form-control admin-combo-input" name="search" value="{{ filters.search }}" placeholder="{% if resource == 'staff' %}搜索姓名、账号或手机号{% elif resource == 'students' %}搜索学生、学校、家长或手机号{% else %}搜索学生、网点或服务项目{% endif %}"></label>
               {% if resource == 'visits' %}
-              <div class="col-md-2"><label class="form-label">到店日期</label><input class="form-control" type="date" name="attendance_date" value="{{ selected_date or '' }}"></div>
+              <label class="admin-combo-field admin-filter-compact"><span class="form-label">到店日期</span><input class="form-control admin-combo-input" type="date" name="attendance_date" value="{{ selected_date or '' }}"></label>
               {% elif status_options %}
-              <div class="col-md-2"><label class="form-label">状态</label><select class="form-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></div>
+              <label class="admin-combo-field admin-filter-medium"><span class="form-label">状态</span><select class="form-select admin-combo-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></label>
               {% endif %}
               <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
               <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/{{ resource }}">重置</a></div>

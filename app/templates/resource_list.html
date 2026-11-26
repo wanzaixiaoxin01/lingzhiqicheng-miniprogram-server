@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-21">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-22">
     <script defer src="/static/admin-dropdown.js?v=20261126-2"></script>
   </head>
   <body>
@@ -90,9 +90,9 @@
         {% else %}
         <form class="card mb-3 admin-filter-bar" method="get" action="/admin/{{ resource }}">
           <div class="card-body">
-            <div class="row g-3 align-items-end">
-              <div class="col-md-5"><label class="form-label">关键词</label><input class="form-control" name="search" value="{{ filters.search }}" placeholder="搜索名称、标题、地址或手机号"></div>
-              {% if status_options %}<div class="col-md-2"><label class="form-label">状态</label><select class="form-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
+            <div class="admin-filter-row">
+              <label class="admin-combo-field admin-filter-wide"><span class="form-label">关键词</span><input class="form-control admin-combo-input" name="search" value="{{ filters.search }}" placeholder="搜索名称、标题、地址或手机号"></label>
+              {% if status_options %}<label class="admin-combo-field admin-filter-medium"><span class="form-label">状态</span><select class="form-select admin-combo-select" name="status"><option value="">全部状态</option>{% for value, label in status_options %}<option value="{{ value }}" {{ 'selected' if filters.status == value else '' }}>{{ label }}</option>{% endfor %}</select></label>{% endif %}
               <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
               <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/{{ resource }}">重置</a></div>
             </div>

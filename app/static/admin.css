@@ -1221,13 +1221,35 @@ th {
 }
 
 .admin-combo-field {
+  min-width: 0;
   min-height: 46px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
   padding: 0 12px;
   border: 1px solid #dce6f1;
   border-radius: 10px;
   background: #fff;
   transition: border-color .16s ease, box-shadow .16s ease;
 }
+
+.admin-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+.admin-filter-row > * {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.admin-filter-wide { flex: 1 1 440px; }
+.admin-filter-medium { flex: 0 1 320px; }
+.admin-filter-compact { flex: 0 1 250px; }
+.admin-filter-row > .col-auto { flex: 0 0 auto; }
 
 .admin-combo-field:focus-within {
   border-color: #6a9fe8;
@@ -1328,11 +1350,19 @@ th {
   .lead-filter-layout { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lead-filter-submit, .lead-filter-reset { width: 100%; }
   .lead-filter-total { justify-self: start; }
+  .admin-filter-row { flex-wrap: wrap; }
+  .admin-filter-wide { flex-basis: 100%; }
+  .admin-filter-medium,
+  .admin-filter-compact { flex: 1 1 280px; }
 }
 
 @media (max-width: 700px) {
   .lead-filter-layout { grid-template-columns: 1fr; }
   .lead-filter-submit, .lead-filter-reset { width: auto; justify-self: start; }
+  .admin-filter-row { align-items: stretch; }
+  .admin-filter-wide,
+  .admin-filter-medium,
+  .admin-filter-compact { flex-basis: 100%; }
 }
 
 /* Shared workspace treatment: compact filters and quiet data surfaces. */

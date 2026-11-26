@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>到店点名 · 灵智启程后台</title>
     <link rel="stylesheet" href="/static/vendor/tabler/tabler.min.css?v=1.4.0">
-    <link rel="stylesheet" href="/static/admin.css?v=20261126-21">
+    <link rel="stylesheet" href="/static/admin.css?v=20261126-22">
   </head>
   <body>
     <main class="shell">
@@ -36,23 +36,14 @@
         <section class="card roll-call-workspace">
           <form class="admin-filter-bar" method="get" action="/admin/visits">
             <div class="card-body">
-            <div class="row g-3 align-items-end">
-              <div class="col-md-2">
-                <label class="form-label">点名日期</label>
-                <input class="form-control" type="date" name="attendance_date" value="{{ selected_date }}">
-              </div>
-              <div class="col-md-3">
-                <label class="form-label">智习室网点</label>
-                <select class="form-select" name="campus_id">
+            <div class="admin-filter-row">
+              <label class="admin-combo-field admin-filter-compact"><span class="form-label">点名日期</span><input class="form-control admin-combo-input" type="date" name="attendance_date" value="{{ selected_date }}"></label>
+              <label class="admin-combo-field admin-filter-medium"><span class="form-label">智习室网点</span><select class="form-select admin-combo-select" name="campus_id">
                   {% for campus in campuses %}
                   <option value="{{ campus.id }}" {{ 'selected' if campus.id == selected_campus_id else '' }}>{{ campus.name }}</option>
                   {% endfor %}
-                </select>
-              </div>
-              <div class="col">
-                <label class="form-label">搜索学生或家长</label>
-                <input class="form-control" name="search" value="{{ search }}" placeholder="输入学生、家长姓名或手机号">
-              </div>
+                </select></label>
+              <label class="admin-combo-field admin-filter-wide"><span class="form-label">学生或家长</span><input class="form-control admin-combo-input" name="search" value="{{ search }}" placeholder="输入学生、家长姓名或手机号"></label>
               <div class="col-auto"><button class="btn btn-primary" type="submit">查询</button></div>
               <div class="col-auto"><a class="btn btn-ghost-secondary" href="/admin/visits">重置</a></div>
             </div>
